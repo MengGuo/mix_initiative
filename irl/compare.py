@@ -10,7 +10,7 @@ def margin_opt_path(robot_planner, opt_path, beta):
     robot_planner.reset_alpha(beta)
     robot_planner.margin_optimal(opt_path, style='ready')
     beta_best_path = list(robot_planner.run.suffix)
-    return path    
+    return beta_best_path
 
 def evaluate_edge_cost(robot_planner, e, beta):
     c = robot_planner.product.edge[e[0]][e[1]]['cost']
@@ -82,26 +82,44 @@ def irl(robot_planner, opt_path, opt_beta):
     t0 = time.time()
     opt_cost = compute_path_cost(robot_planner, opt_path, opt_beta)
     beta_list = [] 
-    beta = 100
-    beta_p = 1
+    beta = 100.0
+    beta_p = 1.0
     count = 0
-    lam = 1
-    alpha = 1
+    lam = 1.0
+    alpha = 1.0
+    cost_list = []
+    match_score = []
     while (abs(beta_p-beta)>0.3):
         print 'Iteration --%d--'%count
         beta = beta_p
         opt_ac_d = compute_path_d(robot_planner, opt_path)
         marg_path = margin_opt_path(robot_planner, opt_path, beta)
         marg_ac_d = compute_path_d(robot_planner, marg_path)
-        gradient = beta + lam*(opt_ac_d-marg_ac_d)
+        print '(opt_ac_d-marg_ac_d)', opt_ac_d-marg_ac_d
+        #gradient = beta + lam*(opt_ac_d-marg_ac_d)
+        gradient = lam*(opt_ac_d-marg_ac_d)
         beta_p = beta - (alpha/(count+1))*gradient
+        print 'gradient:%.2f and beta_dif:%.2f' %(gradient, beta-beta_p)
         count += 1
         print 'old beta: %.2f ||| new beta: %.2f' %(beta, beta_p)
         beta_list.append(beta_p)
+    print '--------------------'
     print 'In total **%d** para_dijkstra run ||| beta list: %s' %(count, str(beta_list))
     print 'Best_beta found: %.2f ||| Given opt_beta: %.2f' %(beta_p, opt_beta)
     print 'Find beta via IRL done, time %.2f' %(time.time()-t0)
-    return beta_p, beta_list
+    print '--------------------'
+    # compute score
+    for beta in beta_list:
+        robot_planner.reset_alpha(beta)
+        robot_planner.optimal(style='ready')
+        opt_beta_path = list(robot_planner.run.suffix)
+        score = opt_path_match(opt_path, opt_beta_path)
+        beta_opt_cost = compute_path_cost(robot_planner, opt_beta_path, beta)
+        match_score.append(score)
+        cost_list.append(beta_opt_cost)
+        print 'Given optimal path cost: %s ||| Beta optimal path cost: %s ||| match score: %d ' %(str(opt_cost), str(beta_opt_cost), score)
+    print 'beta_list: %s ||| cost_list: %s ||| match_score: %s' %(beta_list, cost_list, match_score)
+    return beta_p, beta_list, cost_list, match_score
 
 
 if __name__ == "__main__":
@@ -117,14 +135,7 @@ if __name__ == "__main__":
     # print 'beta_list: %s ||| match_score:%s' %(str(beta_list), str(match_score))
 
     # method TWO, via IRL    
-    beta_p, beta_list = irl(robot_planner, opt_path, opt_beta)
-    match_score = []
-    for beta in beta_list:
-        robot_planner.reset_alpha(beta)
-        robot_planner.optimal(style='ready')
-        score = opt_path_match(opt_path, beta_best_path)
-        match_score.append(score)
-    print 'match score', match_score
+    beta_p, beta_list, cost_list, match_score = irl(robot_planner, opt_path, opt_beta)
         
     
 
