@@ -56,7 +56,7 @@ def construct_product(N):
     robot_model = MotActModel(robot_motion, robot_action)
     # task formula
     hard_task = '[]! x%dy%d' %(floor(0.5*N), floor(0.5*N))
-    soft_task = '([]<> x%dy%d) && ([]<> x%dy%d) && ([]<> x%dy%d)' %(N-1,0,N-1,N-1,0,N-1)
+    soft_task = '([]<> x%dy%d) && ([]<> x%dy%d) && ([]<> x%dy%d) && ([]<> x%dy%d)' %(N-1,0,N-1,N-1,0,N-1,1,1)
     print '------------------------------'
     print 'hard_task: %s ||| soft_task: %s' %(str(hard_task), str(soft_task))
     print '------------------------------'
