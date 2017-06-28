@@ -48,7 +48,7 @@ def find_beta_via_enumeration(robot_planner, opt_path, opt_beta):
     print 'Find beta via enumeration starts'
     t0 = time.time()
     opt_cost = compute_path_cost(robot_planner, opt_path, opt_beta)
-    beta_list = list(np.arange(0,1,0.01))+list(np.arange(1,8,1)) #np.arange(0, 10, 1)
+    beta_list = list(np.arange(0,8,0.1))+list(np.arange(9,10,1)) #np.arange(0, 10, 1)
     match_score = []
     cost_list = []
     prev_best_path = []
@@ -68,6 +68,7 @@ def find_beta_via_enumeration(robot_planner, opt_path, opt_beta):
             key_path.append(list(beta_best_path))
     index_min = max(range(len(match_score)), key= lambda j: match_score[j])
     best_beta = beta_list[index_min]
+    print 'Given optimal path length: %d ||| Given beta: %.2f' %(len(opt_path), opt_beta)
     print 'In total **%d** para_dijkstra run.' %len(beta_list)
     print 'Best_beta found: %.2f ||| Given opt_beta: %.2f' %(best_beta, opt_beta)
     print 'Given optimal path cost: %s ||| Beta optimal path cost: %s ||| match score: %d ' %(str(opt_cost), str(cost_list[index_min]), match_score[index_min])
@@ -105,6 +106,7 @@ def irl(robot_planner, opt_path, opt_beta):
         beta_list.append(beta_p)
     print '--------------------'
     print 'In total **%d** para_dijkstra run ||| beta list: %s' %(count, str(beta_list))
+    print 'Given optimal path length: %d ||| Given beta: %.2f' %(len(opt_path), opt_beta)
     print 'Best_beta found: %.2f ||| Given opt_beta: %.2f' %(beta_p, opt_beta)
     print 'Find beta via IRL done, time %.2f' %(time.time()-t0)
     print '--------------------'
@@ -123,8 +125,9 @@ def irl(robot_planner, opt_path, opt_beta):
 
 
 if __name__ == "__main__":
-    N = 5
-    robot_planner = construct_product(N)
+    M = 3
+    N = 3
+    robot_planner = construct_product(M, N)
     opt_beta = 10
     robot_planner.reset_alpha(opt_beta)
     robot_planner.optimal(style='static')

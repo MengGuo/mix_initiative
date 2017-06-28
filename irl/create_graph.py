@@ -42,13 +42,13 @@ def create_rectworld(Xs, Ys, eight_connected=False):
                     continue
                 nodet = (xt, yt)
                 unit_cost = 1
-                g.add_edge(nodef, nodet, weight=random.random()*unit_cost*(abs(dx)+abs(dy)))
+                g.add_edge(nodef, nodet, weight=unit_cost*(abs(dx)+abs(dy)+random.random()))
     return g
 
 
-def construct_product(N):
+def construct_product(M,N):
     # create motion model
-    robot_motion = create_rectworld(N,N,True)
+    robot_motion = create_rectworld(M,N,True)
     robot_motion.set_initial((0,0))
     # empty action model
     robot_action = ActionModel(dict())
@@ -56,7 +56,7 @@ def construct_product(N):
     robot_model = MotActModel(robot_motion, robot_action)
     # task formula
     hard_task = '[]! x%dy%d' %(floor(0.5*N), floor(0.5*N))
-    soft_task = '([]<> x%dy%d) && ([]<> x%dy%d) && ([]<> x%dy%d) && ([]<> x%dy%d)' %(N-1,0,N-1,N-1,0,N-1,1,1)
+    soft_task = '([]<> x%dy%d) && ([]<> x%dy%d) && ([]<> x%dy%d)' %(N-1,0,N-1,N-1,0,N-1)
     print '------------------------------'
     print 'hard_task: %s ||| soft_task: %s' %(str(hard_task), str(soft_task))
     print '------------------------------'
