@@ -48,7 +48,7 @@ def find_beta_via_enumeration(robot_planner, opt_path, opt_beta):
     print 'Find beta via enumeration starts'
     t0 = time.time()
     opt_cost = compute_path_cost(robot_planner, opt_path, opt_beta)
-    beta_list = list(np.arange(0,8,0.1))+list(np.arange(9,10,1)) #np.arange(0, 10, 1)
+    beta_list = list(np.arange(0,20,0.1)) #+list(np.arange(9,10,1)) #np.arange(0, 10, 1)
     match_score = []
     cost_list = []
     prev_best_path = []
@@ -125,20 +125,20 @@ def irl(robot_planner, opt_path, opt_beta):
 
 
 if __name__ == "__main__":
-    M = 3
-    N = 3
+    M = 10
+    N = 10
     robot_planner = construct_product(M, N)
-    opt_beta = 10
+    opt_beta = 50 #15
     robot_planner.reset_alpha(opt_beta)
     robot_planner.optimal(style='static')
     opt_path = list(robot_planner.run.suffix)
     print 'Given optimal path length: %d ||| Given beta: %.2f' %(len(opt_path), opt_beta)
     # method ONE, via enumeration
-    best_beta, beta_list, cost_list, match_score, key_beta, key_path = find_beta_via_enumeration(robot_planner, opt_path, opt_beta)
-    print 'beta_list: %s ||| match_score:%s' %(str(beta_list), str(match_score))
+    # best_beta, beta_list, cost_list, match_score, key_beta, key_path = find_beta_via_enumeration(robot_planner, opt_path, opt_beta)
+    # print 'beta_list: %s ||| match_score:%s' %(str(beta_list), str(match_score))
 
     # method TWO, via IRL    
-    # beta_p, beta_list, cost_list, match_score = irl(robot_planner, opt_path, opt_beta)
+    beta_p, beta_list, cost_list, match_score = irl(robot_planner, opt_path, opt_beta)
         
     
 
