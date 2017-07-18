@@ -6,6 +6,8 @@ import time
 import numpy as np
 from create_graph import construct_product
 
+import pickle
+
 def margin_opt_path(robot_planner, opt_path, beta):
     robot_planner.reset_alpha(beta)
     robot_planner.margin_optimal(opt_path, style='ready')
@@ -48,10 +50,11 @@ def find_beta_via_enumeration(robot_planner, opt_path, opt_beta):
     print 'Find beta via enumeration starts'
     t0 = time.time()
     opt_cost = compute_path_cost(robot_planner, opt_path, opt_beta)
-    beta_list = list(np.arange(0,20,0.1)) #+list(np.arange(9,10,1)) #np.arange(0, 10, 1)
+    beta_list = list(np.arange(0,15,0.1)) 
     match_score = []
     cost_list = []
     prev_best_path = []
+    prev_cost = []
     key_beta = []
     key_path = []
     for beta in beta_list:
@@ -62,8 +65,10 @@ def find_beta_via_enumeration(robot_planner, opt_path, opt_beta):
         match_score.append(score)
         cost = compute_path_cost(robot_planner, beta_best_path, beta)
         cost_list.append(cost)
-        if prev_best_path != beta_best_path:
+        #if prev_best_path != beta_best_path:
+        if prev_cost[0:2] != cost[0:2]:            
             prev_best_path = list(beta_best_path)
+            prev_cost = list(cost)
             key_beta.append(beta)
             key_path.append(list(beta_best_path))
     index_min = max(range(len(match_score)), key= lambda j: match_score[j])
@@ -125,8 +130,8 @@ def irl(robot_planner, opt_path, opt_beta):
 
 
 if __name__ == "__main__":
-    M = 10
-    N = 10
+    M = 5
+    N = 5
     robot_planner = construct_product(M, N)
     opt_beta = 50 #15
     robot_planner.reset_alpha(opt_beta)
@@ -134,11 +139,12 @@ if __name__ == "__main__":
     opt_path = list(robot_planner.run.suffix)
     print 'Given optimal path length: %d ||| Given beta: %.2f' %(len(opt_path), opt_beta)
     # method ONE, via enumeration
-    # best_beta, beta_list, cost_list, match_score, key_beta, key_path = find_beta_via_enumeration(robot_planner, opt_path, opt_beta)
+    best_beta, beta_list, cost_list, match_score, key_beta, key_path = find_beta_via_enumeration(robot_planner, opt_path, opt_beta)
     # print 'beta_list: %s ||| match_score:%s' %(str(beta_list), str(match_score))
+    pickle.dump([best_beta, beta_list, cost_list, match_score, key_beta, key_path], open('figures/enum_beta.p', 'wb'))
 
     # method TWO, via IRL    
-    beta_p, beta_list, cost_list, match_score = irl(robot_planner, opt_path, opt_beta)
+    # beta_p, beta_list, cost_list, match_score = irl(robot_planner, opt_path, opt_beta)
         
     
 
