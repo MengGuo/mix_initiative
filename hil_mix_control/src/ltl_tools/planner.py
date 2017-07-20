@@ -2,7 +2,7 @@
 from buchi import mission_to_buchi
 from product import ProdAut
 from ts import distance, reach_waypoint
-from discrete_plan import dijkstra_plan_networkX, dijkstra_plan_optimal, improve_plan_given_history
+from discrete_plan import dijkstra_plan_networkX, dijkstra_plan_optimal, improve_plan_given_history, has_path_to_accept
 
 
 class ltl_planner(object):
@@ -102,6 +102,23 @@ class ltl_planner(object):
                                         new_reachable.add(t_s)
                 return new_reachable
 
+        def prod_dist_to_trap(self, pose, reachable_set):
+                mini_dist_reg = min(self.product.graph['ts'].graph['region'].nodes(),
+                                   key = lambda s: distance(pose, s))
+                mini_dist = distance(mini_dist_reg, pose)
+                new_reachable = self.update_reachable(reachable_set, (mini_dist_reg, 'None'))
+                if self.check_trap(new_reachable):
+                        return mini_dist
+                else:
+                        return -1
+
+        def check_trap(self, reachable_set):
+                for s in reachable_set:
+                        if has_path_to_accept(self.product, s):
+                                return False
+                return True
+
+
 	def update(self,object_name):
 		MotionFts = self.product.graph['ts'].graph['region']
 		cur_region = MotionFts.closest_node(self.cur_pose)
@@ -109,7 +126,7 @@ class ltl_planner(object):
 		sense_info['label'] = set([(cur_region,set([object_name,]),set()),]) 
 		changes = MotionFts.update_after_region_change(sense_info,None)
 		if changes:
-			return True
+			return True                        
 
 	def replan(self):
 		new_run = improve_plan_given_history(self.product, self.trace)

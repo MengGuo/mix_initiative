@@ -11,7 +11,7 @@ import time
 from geometry_msgs.msg import PoseWithCovarianceStamped, PoseStamped, Twist
 
 from math import pi as PI
-from math import atan2, sin, cos, sqrt
+from math import atan2, sin, cos, sqrt, exp
 
 from tf.transformations import euler_from_quaternion, quaternion_from_euler
 
@@ -24,6 +24,21 @@ from ltl_tools.planner import ltl_planner
 def norm2(pose1, pose2):
     # 2nd norm distance
     return sqrt((pose1[0]-pose2[0])**2+(pose1[1]-pose2[1])**2)
+
+def rho(s):
+    if (s > 0):
+        return exp(-1.0/s)
+    else:
+        return 0
+        
+def smooth_mix(tele_control, navi_control, dist_to_trap):
+    ds = 0.3
+    epsilon = 0.1
+    mix_control = [0, 0]
+    gain = rho(dist_to_trap-ds)/(rho(dist_to_trap-ds)+rho(epsilon+ds-dist_to_trap))
+    mix_control[0] = navi_control[0] + gain*tele_control[0]
+    mix_control[1] = navi_control[1] + gain*tele_control[1]
+    return mix_control
 
 
 def PoseCallback(posedata):
@@ -69,6 +84,16 @@ def SendGoal(GoalPublisher, goal, time_stamp):
     GoalMsg.pose.orientation.w = quaternion[3]
     GoalPublisher.publish(GoalMsg)
 
+def SendMix(MixPublisher, mix_control):
+    MixMsg = Twist()
+    MixMsg.linear.x = mix_control[0]
+    MixMsg.linear.y = 0
+    MixMsg.linear.z = 0
+    MixMsg.angular.x = 0
+    MixMsg.angular.y = 0
+    MixMsg.angular.z = mix_control[1]
+    MixPublisher.publish(MixMsg)
+
 
 def hil_planner(sys_model, robot_name='turtlebot'):
     global robot_pose
@@ -81,7 +106,7 @@ def hil_planner(sys_model, robot_name='turtlebot'):
     #publish to
     #----------
     GoalPublisher = rospy.Publisher('move_base_simple/goal', PoseStamped, queue_size = 100)
-    rospy.Subscriber('cmd_vel_mux/input/mix', Twist, TeleControlCallback)
+    MixPublisher = rospy.Publisher('cmd_vel_mux/input/mix', Twist, queue_size = 100)
     #----------
     #subscribe to
     #----------
@@ -99,12 +124,12 @@ def hil_planner(sys_model, robot_name='turtlebot'):
     planner.optimal()
     #######
     reach_bound = 0.5 # m
-    hi_v_bound = 0.1 # m/s
-    hi_w_bound = 0.1 # rad/s
+    hi_bound = 0.1
+    hi_bool = False
     #######
     robot_path = []
     reachable_prod_states = set(planner.product['initial'])
-    pre_reach_reg = None
+    pre_reach_ts = None
     #######
     t0 = rospy.Time.now()
     while not rospy.is_shutdown():
@@ -112,11 +137,25 @@ def hil_planner(sys_model, robot_name='turtlebot'):
             t = rospy.Time.now()-t0
             print '----------Time: %.2f----------' %t.to_sec()
             # robot past path update
-            reach_reg = planner.reach_ts_node(robot_pose, reach_bound):
-            if ((reach_reg) and (reach_reg != pre_reach_reg)):
-                robot_path.append(reach_reg)
-                reachable_prod_states = planner.update_reachable(reachable_prod_states, reach_reg)
-                pre_reach_reg = list(reach_reg)
+            reach_ts = planner.reach_ts_node(robot_pose, reach_bound):
+            if ((reach_ts) and (reach_ts != pre_reach_ts)):
+                robot_path.append(reach_ts)
+                reachable_prod_states = planner.update_reachable(reachable_prod_states, reach_ts)
+                pre_reach_ts = list(reach_ts)
+            #------------------------------
+            # mix control inputs
+            if norm2(tele_control) >= hi_bound:
+                print '--- Human inputs detected ---'
+                hi_bool = True
+                dist_to_trap = planner.prod_dist_to_trap(robot_pose, reachable_prod_states)
+                if dist_to_trap >=0:
+                    print 'Distance to trap states in product: %.2f' %dist_to_trap
+                    mix_control = smooth_mix(tele_control, navi_control, dist_to_trap)
+                    SendMix(MixPublisher, mix_control)
+                else:
+                    print 'No trap states are close'
+                rospy.sleep(10)
+            #------------------------------
             # plan execution
             current_goal = planner.next_move
             # next move is action
@@ -124,8 +163,7 @@ def hil_planner(sys_model, robot_name='turtlebot'):
                 print 'the robot next_move is an action, currently not implemented for %s' %robot_name
                 break
             # next move is motion
-                
-            if ((norm2(robot_pose[1][0:2], current_goal[0:2]) > reach_xy_bound) or (abs(robot_pose[1][2])-current_goal[2]) > reach_yaw_bound):
+            if ((reach_reg) and (reach_reg[0] != current_goal)):    
                 SendGoal(GoalPublisher, current_goal, t)
                 print('Goal %s sent to %s.' %(str(current_goal),str(robot_name)))
                 rospy.sleep(10)
