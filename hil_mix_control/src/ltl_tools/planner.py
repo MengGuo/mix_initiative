@@ -6,9 +6,9 @@ from discrete_plan import dijkstra_plan_networkX, dijkstra_plan_optimal, improve
 
 
 class ltl_planner(object):
-	def __init__(self, ts, hard_spec, soft_spec, alpha):
+	def __init__(self, ts, hard_spec, soft_spec, beta):
 		buchi = mission_to_buchi(hard_spec, soft_spec)
-		self.product = ProdAut(ts, buchi, alpha)
+		self.product = ProdAut(ts, buchi, beta)
 		self.Time = 0
 		self.cur_pose = None
 		self.trace = [] # record the regions been visited
@@ -18,30 +18,30 @@ class ltl_planner(object):
 		self.com_log = []
 		# record [(time, no_messages)]
 
-        def reset_alpha(self, alpha):
-                self.product.graph['alpha'] = alpha
+        def reset_beta(self, beta):
+                self.product.graph['beta'] = beta
 
         def margin_optimal(self, opt_path, style='ready'):
                 self.product.build_full_margin(opt_path)
-                self.run, plantime = dijkstra_plan_networkX(self.product, self.beta)
+                self.run, plantime = dijkstra_plan_networkX(self.product, self.gamma)
                 
-	def optimal(self, beta=10, style='static'):
-		self.beta = beta
+	def optimal(self, gamma=10, style='static'):
+		self.gamma = gamma
 		if style == 'static':
 			# full graph construction
 			self.product.graph['ts'].build_full()
 			self.product.build_full()
-			self.run, plantime = dijkstra_plan_networkX(self.product, self.beta)
+			self.run, plantime = dijkstra_plan_networkX(self.product, self.gamma)
 		elif style == 'ready':
 			self.product.build_full()
-			self.run, plantime = dijkstra_plan_networkX(self.product, self.beta)
+			self.run, plantime = dijkstra_plan_networkX(self.product, self.gamma)
 		elif style == 'on-the-fly':
 			# on-the-fly construction
 			self.product.build_initial()
 			self.product.build_accept()
-			self.run, plantime = dijkstra_plan_optimal(self.product, self.beta)
+			self.run, plantime = dijkstra_plan_optimal(self.product, self.gamma)
                 elif styple == 'repeat':
-                        self.run, plantime = dijkstra_plan_networkX(self.product, self.beta)
+                        self.run, plantime = dijkstra_plan_networkX(self.product, self.gamma)
                 if self.run == None:
                         print '---No valid has been found!---'
                         print '---Check you FTS or task---'
@@ -88,6 +88,19 @@ class ltl_planner(object):
 			self.next_move = self.run.suf_plan[self.index]
 		return self.next_move
 
+        def reach_ts_node(self, pose, reach_bound):
+                for n in self.product.graph['ts'].nodes_iter():
+                        if reach_waypoint(n[0], pose, reach_bound):
+                                return n
+                return None
+                        
+        def update_reachable(self, reachable_states, ts_node):
+                new_reachable = set()                
+                for f_s in reachable_states:
+                        for t_s in self.product.successors_iter(f_s):
+                                if t_s[0] == ts_node:
+                                        new_reachable.add(t_s)
+                return new_reachable
 
 	def update(self,object_name):
 		MotionFts = self.product.graph['ts'].graph['region']

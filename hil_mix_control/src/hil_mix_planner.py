@@ -8,7 +8,7 @@ import sys
 
 import time
 
-from geometry_msgs.msg import PoseWithCovarianceStamped, PoseStamped
+from geometry_msgs.msg import PoseWithCovarianceStamped, PoseStamped, Twist
 
 from math import pi as PI
 from math import atan2, sin, cos, sqrt
@@ -40,6 +40,18 @@ def PoseCallback(posedata):
         robot_pose[1] = [pose.pose.position.x, pose.pose.position.y, euler[2]] # in radians
     return robot_pose
 
+def NaviControlCallback(twistdata):
+    global navi_control
+    linear_v = twistdata.linear.x
+    angular_v = twistdata.linear.z
+    navi_control = [linear_v, angular_v]
+
+def TeleControlCallback(twistdata):
+    global tele_control
+    linear_v = twistdata.linear.x
+    angular_v = twistdata.linear.z
+    tele_control = [linear_v, angular_v]    
+    
 
 def SendGoal(GoalPublisher, goal, time_stamp):
     # goal: [x, y, yaw]
@@ -58,7 +70,7 @@ def SendGoal(GoalPublisher, goal, time_stamp):
     GoalPublisher.publish(GoalMsg)
 
 
-def planner(sys_model, robot_name='turtlebot'):
+def hil_planner(sys_model, robot_name='turtlebot'):
     global robot_pose
     robot_full_model, hard_task, soft_task = sys_model
     robot_pose = [None, init_pose]
@@ -69,28 +81,50 @@ def planner(sys_model, robot_name='turtlebot'):
     #publish to
     #----------
     GoalPublisher = rospy.Publisher('move_base_simple/goal', PoseStamped, queue_size = 100)
+    rospy.Subscriber('cmd_vel_mux/input/mix', Twist, TeleControlCallback)
     #----------
     #subscribe to
     #----------
+    # position estimate from amcl
     rospy.Subscriber('amcl_pose', PoseWithCovarianceStamped, PoseCallback)
+    # control command from amcl navigation
+    rospy.Subscriber('cmd_vel_mux/input/navi', Twist, NaviControlCallback)
+    # control command from tele operation
+    rospy.Subscriber('cmd_vel_mux/input/teleop', Twist, TeleControlCallback)
     ####### robot information
     full_model = MotActModel(ts, act)
-    planner = ltl_planner(robot_full_model, hard_task, soft_task)
+    initial_beta = 1
+    planner = ltl_planner(robot_full_model, hard_task, soft_task, initial_beta)
     ####### initial plan synthesis
-    planner.optimal(10)
+    planner.optimal()
     #######
-    reach_xy_bound = 0.5 # m
-    reach_yaw_bound = 0.5*PI # rad
-    #######    
+    reach_bound = 0.5 # m
+    hi_v_bound = 0.1 # m/s
+    hi_w_bound = 0.1 # rad/s
+    #######
+    robot_path = []
+    reachable_prod_states = set(planner.product['initial'])
+    pre_reach_reg = None
+    #######
     t0 = rospy.Time.now()
     while not rospy.is_shutdown():
         try:
             t = rospy.Time.now()-t0
             print '----------Time: %.2f----------' %t.to_sec()
+            # robot past path update
+            reach_reg = planner.reach_ts_node(robot_pose, reach_bound):
+            if ((reach_reg) and (reach_reg != pre_reach_reg)):
+                robot_path.append(reach_reg)
+                reachable_prod_states = planner.update_reachable(reachable_prod_states, reach_reg)
+                pre_reach_reg = list(reach_reg)
+            # plan execution
             current_goal = planner.next_move
+            # next move is action
             if isinstance(current_goal, str):
                 print 'the robot next_move is an action, currently not implemented for %s' %robot_name
                 break
+            # next move is motion
+                
             if ((norm2(robot_pose[1][0:2], current_goal[0:2]) > reach_xy_bound) or (abs(robot_pose[1][2])-current_goal[2]) > reach_yaw_bound):
                 SendGoal(GoalPublisher, current_goal, t)
                 print('Goal %s sent to %s.' %(str(current_goal),str(robot_name)))
@@ -105,7 +139,6 @@ def planner(sys_model, robot_name='turtlebot'):
 
 if __name__ == '__main__':
     try:
-        [robot_motact, init_pose, robot_action] = robot_model
-        planner(robot_motact, init_pose, robot_action, robot_task)
+        hil_planner(sys_model)
     except rospy.ROSInterruptException:
         pass

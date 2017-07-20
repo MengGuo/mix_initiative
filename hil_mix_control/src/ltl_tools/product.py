@@ -6,8 +6,8 @@ from networkx.classes.digraph import DiGraph
 
 
 class ProdAut(DiGraph):
-	def __init__(self, ts, buchi, alpha=100):
-		DiGraph.__init__(self, ts=ts, buchi=buchi, alpha=alpha, initial=set(), accept=set(), type='ProdAut')
+	def __init__(self, ts, buchi, beta=100):
+		DiGraph.__init__(self, ts=ts, buchi=buchi, beta=beta, initial=set(), accept=set(), type='ProdAut')
 
 	def build_full(self):
 		for f_ts_node in self.graph['ts'].nodes_iter():
@@ -21,9 +21,9 @@ class ProdAut(DiGraph):
 							label = self.graph['ts'].node[f_ts_node]['label']
 							cost = self.graph['ts'][f_ts_node][t_ts_node]['weight']
 							truth, dist = check_label_for_buchi_edge(self.graph['buchi'], label, f_buchi_node, t_buchi_node)
-							total_weight = cost + self.graph['alpha']*dist
                                                         #print 'label,truth,total_weight', label,truth,total_weight
 							if truth:
+                                                                total_weight = cost + self.graph['beta']*dist
 								self.add_edge(f_prod_node, t_prod_node, weight=total_weight, cost=cost, distance=dist)
                                                                 #print 'add edge', (f_prod_node, t_prod_node)
                 print 'full product constructed with %d states and %s transitions' %(len(self.nodes()), len(self.edges()))
@@ -43,7 +43,7 @@ class ProdAut(DiGraph):
 							label = self.graph['ts'].node[f_ts_node]['label']
 							cost = self.graph['ts'][f_ts_node][t_ts_node]['weight']
 							truth, dist = check_label_for_buchi_edge(self.graph['buchi'], label, f_buchi_node, t_buchi_node)
-							total_weight = cost + self.graph['alpha']*dist + 1
+							total_weight = cost + self.graph['beta']*dist + 1
                                                         #print 'label,truth,total_weight', label,truth,total_weight
                                                         if (f_prod_node, t_prod_node) in opt_edges:
                                                                 k = 1
@@ -93,7 +93,7 @@ class ProdAut(DiGraph):
 				f_prod_node = self.composition(f_ts_node, f_buchi_node)
 				label = self.graph['ts'].node[f_ts_node]['label']
 				truth, dist = check_label_for_buchi_edge(self.graph['buchi'], label, f_buchi_node, t_buchi_node)
-				total_weight = cost + self.graph['alpha']*dist
+				total_weight = cost + self.graph['beta']*dist
 				if truth:
 					pre_set.add(f_prod_node)
 					self.add_edge(f_prod_node, accept_node, weight=total_weight)
@@ -114,7 +114,7 @@ class ProdAut(DiGraph):
 					t_prod_node = self.composition(t_ts_node, t_buchi_node)
 					label = self.graph['ts'].node[f_ts_node]['label']
 					truth, dist = check_label_for_buchi_edge(self.graph['buchi'], label, f_buchi_node, t_buchi_node)
-					total_weight = cost + self.graph['alpha']*dist
+					total_weight = cost + self.graph['beta']*dist
 					if truth:
 						self.add_edge(f_prod_node, t_prod_node, weight=total_weight)
 						yield t_prod_node, total_weight
