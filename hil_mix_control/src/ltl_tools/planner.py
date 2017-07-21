@@ -42,7 +42,7 @@ class ltl_planner(object):
 			self.product.build_initial()
 			self.product.build_accept()
 			self.run, plantime = dijkstra_plan_optimal(self.product, self.gamma)
-                elif styple == 'repeat':
+                elif style == 'repeat':
                         self.run, plantime = dijkstra_plan_networkX(self.product, self.gamma)
                 if self.run == None:
                         print '---No valid has been found!---'
@@ -215,7 +215,8 @@ class ltl_planner(object):
             print 'In total **%d** para_dijkstra run ||| beta sequence: %s' %(count, str(beta_seq))
             print 'Opt_path length: %d, match score sequence: %s' %(len(opt_path), str(score_seq))
             print '--------------------'
-            self.optimal(style='static')
+            self.reset_beta(beta)
+            self.optimal(style='ready')
             opt_suffix = list(self.run.suffix)
             self.set_to_suffix()
             print 'opt_suffix updated to %s' %str(opt_suffix)

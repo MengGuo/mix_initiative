@@ -38,7 +38,7 @@ def smooth_mix(tele_control, navi_control, dist_to_trap):
     gain = rho(dist_to_trap-ds)/(rho(dist_to_trap-ds)+rho(epsilon+ds-dist_to_trap))
     mix_control[0] = navi_control[0] + gain*tele_control[0]
     mix_control[1] = navi_control[1] + gain*tele_control[1]
-    return mix_control
+    return mix_control, gain
 
 
 def PoseCallback(posedata):
@@ -152,7 +152,7 @@ def hil_planner(sys_model, robot_name='turtlebot'):
                 dist_to_trap = planner.prod_dist_to_trap(robot_pose, reachable_prod_states)
                 if dist_to_trap >=0:
                     print 'Distance to trap states in product: %.2f' %dist_to_trap
-                    mix_control = smooth_mix(tele_control, navi_control, dist_to_trap)
+                    mix_control, gain = smooth_mix(tele_control, navi_control, dist_to_trap)
                     SendMix(MixPublisher, mix_control)
                 else:
                     print 'No trap states are close'
@@ -165,7 +165,6 @@ def hil_planner(sys_model, robot_name='turtlebot'):
                 print '--- Accepting state reached ---'
                 est_beta_seq, match_score = planner.irl(robot_path, reachable_prod_states)
                 hi_bool = False
-                planner.set_to_suffix()
                 robot_path = []
             #------------------------------
             # plan execution

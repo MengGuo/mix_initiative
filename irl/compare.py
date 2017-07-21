@@ -19,22 +19,14 @@ def evaluate_edge_cost(robot_planner, e, beta):
     d = robot_planner.product.edge[e[0]][e[1]]['distance']
     return c+beta*d
     
-def compute_path_cost(robot_planner, path, beta):
+def compute_path_cost(robot_planner, path):
     ac_c = 0
     ac_d = 0
     for i in range(len(path)-1):
         e = (path[i], path[i+1])
         ac_d += robot_planner.product.edge[e[0]][e[1]]['distance']
         ac_c += robot_planner.product.edge[e[0]][e[1]]['cost']
-    cost = ac_c + beta*ac_d
-    return [ac_c, ac_d, beta, cost]
-
-def compute_path_d(robot_planner, path):
-    ac_d = 0
-    for i in range(len(path)-1):
-        e = (path[i], path[i+1])
-        ac_d += robot_planner.product.edge[e[0]][e[1]]['distance']
-    return ac_d
+    return [ac_c, ac_d]
         
 def opt_path_match(path1, path2):
     # print 'path1', path1
@@ -45,11 +37,36 @@ def opt_path_match(path1, path2):
             score += 1
     return score
 
+def find_beta_via_list(robot_planner, opt_path, opt_beta):
+    print '------------------------------'
+    print 'Find beta via enumeration starts'
+    t0 = time.time()
+    opt_cost = compute_path_cost(robot_planner, opt_path)
+    count = 0
+    beta_ceil = 100
+    beta_floor = 0
+    for cand_path in nx.all_simple_paths(robot_planner.product, opt_path[0], opt_path[-1]):
+        cand_cost = compute_path_cost(robot_planner, cand_path)
+        count += 1
+        if (opt_cost[0] > cand_cost[0]) and (can_cost[1] > opt_cost[1]):
+            beta_low = (opt_cost[0]-cand_cost[0])/(can_cost[1]-opt_cost[1])
+            if beta_low > beta_floor:
+                beta_floor = beta_low 
+        elif (opt_cost[0] < cand_cost[0]) and (can_cost[1] < opt_cost[1]):
+            beta_high = (opt_cost[0]-cand_cost[0])/(can_cost[1]-opt_cost[1])
+            if beta_high < beta_ceil:
+                beta_ceil = beta_high
+        if count > 10000:
+           break    
+    print 'Beta via list terminated, time %.2f' %(time.time()-t0)
+    print 'Beta bound found as [%.2f, %.2f]' %(beta_floor, beta_ceil)
+        
+
 def find_beta_via_enumeration(robot_planner, opt_path, opt_beta):
     print '------------------------------'
     print 'Find beta via enumeration starts'
     t0 = time.time()
-    opt_cost = compute_path_cost(robot_planner, opt_path, opt_beta)
+    opt_cost = compute_path_cost(robot_planner, opt_path)
     beta_list = list(np.arange(0,15,0.1)) 
     match_score = []
     cost_list = []
@@ -63,7 +80,7 @@ def find_beta_via_enumeration(robot_planner, opt_path, opt_beta):
         beta_best_path = list(robot_planner.run.suffix)
         score = opt_path_match(opt_path, beta_best_path)
         match_score.append(score)
-        cost = compute_path_cost(robot_planner, beta_best_path, beta)
+        cost = compute_path_cost(robot_planner, beta_best_path)
         cost_list.append(cost)
         #if prev_best_path != beta_best_path:
         if prev_cost[0:2] != cost[0:2]:            
@@ -86,7 +103,8 @@ def irl(robot_planner, opt_path, opt_beta):
     print '------------------------------'
     print 'Find beta via IRL starts'
     t0 = time.time()
-    opt_cost = compute_path_cost(robot_planner, opt_path, opt_beta)
+    opt_cost = compute_path_cost(robot_planner, opt_path)
+    opt_ac_d = opt_cost[1]
     beta_list = [] 
     beta = 100.0
     beta_p = 1.0
@@ -98,9 +116,9 @@ def irl(robot_planner, opt_path, opt_beta):
     while (abs(beta_p-beta)>0.3):
         print 'Iteration --%d--'%count
         beta = beta_p
-        opt_ac_d = compute_path_d(robot_planner, opt_path)
         marg_path = margin_opt_path(robot_planner, opt_path, beta)
-        marg_ac_d = compute_path_d(robot_planner, marg_path)
+        marg_cost = compute_path_cost(robot_planner, marg_path)
+        marg_ac_d = marg_cost[1]
         print '(opt_ac_d-marg_ac_d)', opt_ac_d-marg_ac_d
         #gradient = beta + lam*(opt_ac_d-marg_ac_d)
         gradient = lam*(opt_ac_d-marg_ac_d)
@@ -121,7 +139,7 @@ def irl(robot_planner, opt_path, opt_beta):
         robot_planner.optimal(style='ready')
         opt_beta_path = list(robot_planner.run.suffix)
         score = opt_path_match(opt_path, opt_beta_path)
-        beta_opt_cost = compute_path_cost(robot_planner, opt_beta_path, beta)
+        beta_opt_cost = compute_path_cost(robot_planner, opt_beta_path)
         match_score.append(score)
         cost_list.append(beta_opt_cost)
         print 'Given optimal path cost: %s ||| Beta optimal path cost: %s ||| match score: %d ' %(str(opt_cost), str(beta_opt_cost), score)
