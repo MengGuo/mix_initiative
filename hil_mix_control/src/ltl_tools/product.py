@@ -27,8 +27,8 @@ class ProdAut(DiGraph):
 								self.add_edge(f_prod_node, t_prod_node, weight=total_weight, cost=cost, distance=dist)
                                                                 #print 'add edge', (f_prod_node, t_prod_node)
                 print 'full product constructed with %d states and %s transitions' %(len(self.nodes()), len(self.edges()))
-
-
+                                
+                
 	def build_full_margin(self, opt_path):
                 if len(opt_path) >= 2:
                         opt_edges = zip(opt_path[0::2], opt_path[1::2])

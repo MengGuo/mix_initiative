@@ -2,7 +2,8 @@
 
 from product import ProdAut_Run
 from collections import defaultdict
-from networkx import dijkstra_predecessor_and_distance, has_path
+from networkx import dijkstra_predecessor_and_distance, has_path, shortest_simple_paths, shortest_path
+
 import time 
 
 
@@ -55,7 +56,49 @@ def dijkstra_plan_networkX(product, beta=10):
 	print 'No accepting run found in optimal planning!'
         return None, None
 
+def compute_path_ac_d(product, path):
+        ac_d = 0
+        for i in range(len(path)-1):
+                e = (path[i], path[i+1])
+                ac_d += product.edge[e[0]][e[1]]['distance']
+        return ac_d
 
+def opt_path_in_prefix(product, ts_path, reachable_states):
+        path_pool = set()
+        for init in product.graph['initial']:
+                if init[0] != ts_path[0]:
+                        print 'First state is not initial state. Check!'
+                        break
+                for end_state in reachable_states:
+                        for line_path in shortest_simple_paths(product, init, end_state, 'weight'):
+                                if len(line_path) == len(ts_path):
+                                        if all(line_path[k][0] == ts_path[k] for k in range(0, len(ts_path))):
+                                                path_pool.add(line_path)
+                                                break
+        opt_line_path = min(path_pool, key=lambda p: compute_path_ac_d(product, p))
+        return opt_line_path
+
+def opt_path_in_suffix(product, ts_path, reachable_states):
+        path_pool = set()
+        for acc in product.graph['accept']:
+                if acc[0] != ts_path[0]:
+                        print 'First state is not accepting state. Check!'
+                        break
+                for end_state in reachable_states:
+                        for line_path in shortest_simple_paths(product, acc, end_state, 'weight'):
+                                if len(line_path) == len(ts_path):
+                                        if all(line_path[k][0] == ts_path[k] for k in range(0, len(ts_path))):
+                                                path_pool.add(line_path)
+                                                break
+        opt_line_path = min(path_pool, key=lambda p: compute_path_ac_d(product, p))
+        return opt_line_path        
+        
+
+def dijkstra_path_networkX(product, start, goal):
+        opt_path = shortest_path(product, start, goal, 'weight')
+        return opt_path                
+
+        
 def dijkstra_plan_optimal(product, beta=10, start_set=None):
 	start = time.time()
 	#print 'dijkstra plan started!'

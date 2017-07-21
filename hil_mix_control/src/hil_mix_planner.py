@@ -122,6 +122,8 @@ def hil_planner(sys_model, robot_name='turtlebot'):
     planner = ltl_planner(robot_full_model, hard_task, soft_task, initial_beta)
     ####### initial plan synthesis
     planner.optimal()
+    print 'Original beta:', initial_beta
+    print 'Initial optimal plan', planner.run.suf_plan
     #######
     reach_bound = 0.5 # m
     hi_bound = 0.1
@@ -155,6 +157,16 @@ def hil_planner(sys_model, robot_name='turtlebot'):
                 else:
                     print 'No trap states are close'
                 rospy.sleep(10)
+            #------------------------------
+            # estimate human preference, i.e. beta
+            # and update discrete plan            
+            if ((hi_bool) and (reach_ts)
+                and (planner.check_accept(reachable_prod_states))):
+                print '--- Accepting state reached ---'
+                est_beta_seq, match_score = planner.irl(robot_path, reachable_prod_states)
+                hi_bool = False
+                planner.set_to_suffix()
+                robot_path = []
             #------------------------------
             # plan execution
             current_goal = planner.next_move

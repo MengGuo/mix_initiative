@@ -2,7 +2,9 @@
 from buchi import mission_to_buchi
 from product import ProdAut
 from ts import distance, reach_waypoint
-from discrete_plan import dijkstra_plan_networkX, dijkstra_plan_optimal, improve_plan_given_history, has_path_to_accept
+from discrete_plan import dijkstra_plan_networkX, dijkstra_plan_optimal, improve_plan_given_history, has_path_to_accept, dijkstra_path_networkX, opt_path_in_prefix, opt_path_in_suffix
+
+import time
 
 
 class ltl_planner(object):
@@ -21,9 +23,9 @@ class ltl_planner(object):
         def reset_beta(self, beta):
                 self.product.graph['beta'] = beta
 
-        def margin_optimal(self, opt_path, style='ready'):
-                self.product.build_full_margin(opt_path)
-                self.run, plantime = dijkstra_plan_networkX(self.product, self.gamma)
+        def set_to_suffix(self):
+                self.segment = 'loop'
+                self.index = 0
                 
 	def optimal(self, gamma=10, style='static'):
 		self.gamma = gamma
@@ -90,7 +92,8 @@ class ltl_planner(object):
 
         def reach_ts_node(self, pose, reach_bound):
                 for n in self.product.graph['ts'].nodes_iter():
-                        if reach_waypoint(n[0], pose, reach_bound):
+                        if (reach_waypoint(n[0], pose, reach_bound))
+                        and (n[1] == 'None'):
                                 return n
                 return None
                         
@@ -118,6 +121,13 @@ class ltl_planner(object):
                                 return False
                 return True
 
+        def check_accept(self, reachable_set):
+                accept_set = self.product.graph['accept']
+                if accept_set.intersection(reachable_set):
+                        return True
+                else:
+                        return False
+
 
 	def update(self,object_name):
 		MotionFts = self.product.graph['ts'].graph['region']
@@ -137,9 +147,80 @@ class ltl_planner(object):
 			self.next_move = self.run.pre_plan[self.index]
 			print 'Plan adapted!'
 
+        def compute_path_cost(self, path):
+                ac_c = 0
+                ac_d = 0
+                for i in range(len(path)-1):
+                        e = (path[i], path[i+1])
+                        ac_d += self.product.edge[e[0]][e[1]]['distance']
+                        ac_c += self.product.edge[e[0]][e[1]]['cost']
+                return [ac_c, ac_d]
 
+        def margin_opt_path(self, opt_path, beta):
+            self.reset_beta(beta)
+            self.product.build_full_margin(opt_path)
+            marg_path = dijkstra_path_networkX(self.product, opt_path[0], opt_path[-1])
+            return marg_path
 
+                
+        def opt_path_match(self, path1, path2):
+            score = 0
+            for i,s in enumerate(path1):
+                if ((i< len(path2)) and (path2[i] == s)):
+                    score += 1
+            return score
 
+        def find_opt_path(self, ts_path, reachable_prod_states):
+                if self.segment == 'line':
+                        print 'In prefix'
+                        opt_path = opt_path_in_prefix(self.product, ts_path, reachable_prod_states)
+                        return opt_path
+                elif self.segment == 'loop':
+                        print 'In suffix'
+                        opt_path = opt_path_in_suffix(self.product, ts_path, reachable_prod_states)
+                        return opt_path                        
+            
+        def irl(self, ts_path, reachable_prod_states):
+                print '------------------------------'
+                print 'Find beta via IRL starts'
+                t0 = time.time()
+                opt_path = self.find_opt_path(ts_path, reachable_prod_states)
+                opt_cost = self.compute_path_cost(opt_path)
+                opt_ac_d = opt_cost[1]
+                beta_seq = [] 
+                beta = 100.0
+                beta_p = 1.0
+                count = 0
+                lam = 1.0
+                alpha = 1.0
+                match_score = []
+            while (abs(beta_p-beta)>0.3):
+                print 'Iteration --%d--'%count
+                beta = beta_p
+                marg_path = self.margin_opt_path(opt_path, beta)
+                marg_cost = self.compute_path_cost(marg_path)
+                marg_ac_d = marg_cost[1]
+                print '(opt_ac_d-marg_ac_d)', opt_ac_d-marg_ac_d
+                #gradient = beta + lam*(opt_ac_d-marg_ac_d)
+                gradient = lam*(opt_ac_d-marg_ac_d)
+                beta_p = beta - (alpha/(count+1))*gradient
+                print 'gradient:%.2f and beta_dif:%.2f' %(gradient, beta-beta_p)
+                count += 1
+                print 'old beta: %.2f ||| new beta: %.2f' %(beta, beta_p)
+                score = self.opt_path_match(opt_path, marg_path)
+                beta_seq.append(beta_p)
+                match_score.append(score)
+            print '--------------------'
+            print 'Find beta via IRL done, time %.2f' %(time.time()-t0)
+            print 'In total **%d** para_dijkstra run ||| beta sequence: %s' %(count, str(beta_seq))
+            print 'Opt_path length: %d, match score sequence: %s' %(len(opt_path), str(score_seq))
+            print '--------------------'
+            self.optimal(style='static')
+            opt_suffix = list(self.run.suffix)
+            self.set_to_suffix()
+            print 'opt_suffix updated to %s' %str(opt_suffix)
+            print '-----------------'
+            return beta_seq, match_score
 
 
 
