@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 import roslib, rospy
-roslib.load_manifest('tiago_ltl_flexbe')
+roslib.load_manifest('hil_mix_control')
 import sys
 
 import time

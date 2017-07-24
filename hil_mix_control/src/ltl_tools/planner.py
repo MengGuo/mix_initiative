@@ -92,8 +92,8 @@ class ltl_planner(object):
 
         def reach_ts_node(self, pose, reach_bound):
                 for n in self.product.graph['ts'].nodes_iter():
-                        if (reach_waypoint(n[0], pose, reach_bound))
-                        and (n[1] == 'None'):
+                        if ((reach_waypoint(n[0], pose, reach_bound))
+                            and (n[1] == 'None')):
                                 return n
                 return None
                         
@@ -194,34 +194,34 @@ class ltl_planner(object):
                 lam = 1.0
                 alpha = 1.0
                 match_score = []
-            while (abs(beta_p-beta)>0.3):
-                print 'Iteration --%d--'%count
-                beta = beta_p
-                marg_path = self.margin_opt_path(opt_path, beta)
-                marg_cost = self.compute_path_cost(marg_path)
-                marg_ac_d = marg_cost[1]
-                print '(opt_ac_d-marg_ac_d)', opt_ac_d-marg_ac_d
-                #gradient = beta + lam*(opt_ac_d-marg_ac_d)
-                gradient = lam*(opt_ac_d-marg_ac_d)
-                beta_p = beta - (alpha/(count+1))*gradient
-                print 'gradient:%.2f and beta_dif:%.2f' %(gradient, beta-beta_p)
-                count += 1
-                print 'old beta: %.2f ||| new beta: %.2f' %(beta, beta_p)
-                score = self.opt_path_match(opt_path, marg_path)
-                beta_seq.append(beta_p)
-                match_score.append(score)
-            print '--------------------'
-            print 'Find beta via IRL done, time %.2f' %(time.time()-t0)
-            print 'In total **%d** para_dijkstra run ||| beta sequence: %s' %(count, str(beta_seq))
-            print 'Opt_path length: %d, match score sequence: %s' %(len(opt_path), str(score_seq))
-            print '--------------------'
-            self.reset_beta(beta)
-            self.optimal(style='ready')
-            opt_suffix = list(self.run.suffix)
-            self.set_to_suffix()
-            print 'opt_suffix updated to %s' %str(opt_suffix)
-            print '-----------------'
-            return beta_seq, match_score
+                while (abs(beta_p-beta)>0.3):
+                        print 'Iteration --%d--'%count
+                        beta = beta_p
+                        marg_path = self.margin_opt_path(opt_path, beta)
+                        marg_cost = self.compute_path_cost(marg_path)
+                        marg_ac_d = marg_cost[1]
+                        print '(opt_ac_d-marg_ac_d)', opt_ac_d-marg_ac_d
+                        #gradient = beta + lam*(opt_ac_d-marg_ac_d)
+                        gradient = lam*(opt_ac_d-marg_ac_d)
+                        beta_p = beta - (alpha/(count+1))*gradient
+                        print 'gradient:%.2f and beta_dif:%.2f' %(gradient, beta-beta_p)
+                        count += 1
+                        print 'old beta: %.2f ||| new beta: %.2f' %(beta, beta_p)
+                        score = self.opt_path_match(opt_path, marg_path)
+                        beta_seq.append(beta_p)
+                        match_score.append(score)
+                print '--------------------'
+                print 'Find beta via IRL done, time %.2f' %(time.time()-t0)
+                print 'In total **%d** para_dijkstra run ||| beta sequence: %s' %(count, str(beta_seq))
+                print 'Opt_path length: %d, match score sequence: %s' %(len(opt_path), str(score_seq))
+                print '--------------------'
+                self.reset_beta(beta)
+                self.optimal(style='ready')
+                opt_suffix = list(self.run.suffix)
+                self.set_to_suffix()
+                print 'opt_suffix updated to %s' %str(opt_suffix)
+                print '-----------------'
+                return beta_seq, match_score
 
 
 

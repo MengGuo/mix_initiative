@@ -7,12 +7,12 @@ import time
 
 ##############################
 # motion FTS
-ap = ['r1', 'r2', 'r3', 'r4']
-loc = [(0.57, -10.01, 0.95), (-3.25, -0.31, 0.82), (-2.89, -9.01, 0.52), (-10, -1, 0.52)]
-regions = {   loc[0]: set(['r1',]),
-              loc[1]: set(['r2',]),
-              loc[2]: set(['r3',]),
-              loc[3]: set(['r4',]),              
+ap = ['r0', 'r1', 'r2', 'r3']
+loc = [(3.06, -2.07, 1.04), (1.96, 2.80, 0.40), (-4.92, 2.49, -2.79), (-2.55, -4.07, -0.41)]
+regions = {   loc[0]: set(['r0',]),
+              loc[1]: set(['r1',]),
+              loc[2]: set(['r2',]),
+              loc[3]: set(['r3',]),              
 }
 
 init_pose = loc[0]
@@ -25,7 +25,7 @@ robot_motion.add_un_edges(edge_list, unit_cost = 0.1)
 ##############################
 # action FTS
 ############# no action model
-# action = dict()
+action = dict()
 
 robot_action = ActionModel(action)
 

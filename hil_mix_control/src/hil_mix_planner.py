@@ -58,13 +58,13 @@ def PoseCallback(posedata):
 def NaviControlCallback(twistdata):
     global navi_control
     linear_v = twistdata.linear.x
-    angular_v = twistdata.linear.z
+    angular_v = twistdata.angular.z
     navi_control = [linear_v, angular_v]
 
 def TeleControlCallback(twistdata):
     global tele_control
     linear_v = twistdata.linear.x
-    angular_v = twistdata.linear.z
+    angular_v = twistdata.angular.z
     tele_control = [linear_v, angular_v]    
     
 
@@ -96,9 +96,11 @@ def SendMix(MixPublisher, mix_control):
 
 
 def hil_planner(sys_model, robot_name='turtlebot'):
-    global robot_pose
+    global robot_pose, navi_control, tele_control
     robot_full_model, hard_task, soft_task = sys_model
-    robot_pose = [None, init_pose]
+    robot_pose = [None, [0, 0, 0]]
+    navi_control = [0, 0]
+    tele_control = [0, 0]
     rospy.init_node('ltl_planner_%s' %robot_name)
     print 'Robot %s: ltl_planner started!' %(robot_name)
     ###### publish to
@@ -117,8 +119,7 @@ def hil_planner(sys_model, robot_name='turtlebot'):
     # control command from tele operation
     rospy.Subscriber('cmd_vel_mux/input/teleop', Twist, TeleControlCallback)
     ####### robot information
-    full_model = MotActModel(ts, act)
-    initial_beta = 1
+    initial_beta = 0
     planner = ltl_planner(robot_full_model, hard_task, soft_task, initial_beta)
     ####### initial plan synthesis
     planner.optimal()
@@ -130,7 +131,7 @@ def hil_planner(sys_model, robot_name='turtlebot'):
     hi_bool = False
     #######
     robot_path = []
-    reachable_prod_states = set(planner.product['initial'])
+    reachable_prod_states = set(planner.product.graph['initial'])
     pre_reach_ts = None
     #######
     t0 = rospy.Time.now()
@@ -139,17 +140,17 @@ def hil_planner(sys_model, robot_name='turtlebot'):
             t = rospy.Time.now()-t0
             print '----------Time: %.2f----------' %t.to_sec()
             # robot past path update
-            reach_ts = planner.reach_ts_node(robot_pose, reach_bound):
+            reach_ts = planner.reach_ts_node(robot_pose[1], reach_bound)
             if ((reach_ts) and (reach_ts != pre_reach_ts)):
                 robot_path.append(reach_ts)
                 reachable_prod_states = planner.update_reachable(reachable_prod_states, reach_ts)
                 pre_reach_ts = list(reach_ts)
             #------------------------------
             # mix control inputs
-            if norm2(tele_control) >= hi_bound:
+            if norm2(tele_control, [0,0]) >= hi_bound:
                 print '--- Human inputs detected ---'
                 hi_bool = True
-                dist_to_trap = planner.prod_dist_to_trap(robot_pose, reachable_prod_states)
+                dist_to_trap = planner.prod_dist_to_trap(robot_pose[1], reachable_prod_states)
                 if dist_to_trap >=0:
                     print 'Distance to trap states in product: %.2f' %dist_to_trap
                     mix_control, gain = smooth_mix(tele_control, navi_control, dist_to_trap)
@@ -157,6 +158,10 @@ def hil_planner(sys_model, robot_name='turtlebot'):
                 else:
                     print 'No trap states are close'
                 rospy.sleep(10)
+            else:
+                print 'No Human inputs. Autonomous controller used.'
+                mix_control = list(navi_control)
+                SendMix(MixPublisher, mix_control)                
             #------------------------------
             # estimate human preference, i.e. beta
             # and update discrete plan            
@@ -174,13 +179,13 @@ def hil_planner(sys_model, robot_name='turtlebot'):
                 print 'the robot next_move is an action, currently not implemented for %s' %robot_name
                 break
             # next move is motion
-            if ((reach_reg) and (reach_reg[0] != current_goal)):    
+            if ((reach_ts) and (reach_ts[0] == current_goal)):    
+                print('Goal %s reached by %s.' %(str(current_goal),str(robot_name)))
+                planner.find_next_move()
+            else:
                 SendGoal(GoalPublisher, current_goal, t)
                 print('Goal %s sent to %s.' %(str(current_goal),str(robot_name)))
                 rospy.sleep(10)
-            else:
-                print('Goal %s reached by %s.' %(str(current_goal),str(robot_name)))
-                planner.find_next_move()
         except rospy.ROSInterruptException:
             pass
 
