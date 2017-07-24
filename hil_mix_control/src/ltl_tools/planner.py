@@ -27,6 +27,12 @@ class ltl_planner(object):
                 self.segment = 'loop'
                 self.index = 0
                 
+        def start_suffix(self):
+                if ((self.segment == 'loop') and (self.index == 0)):
+                        return True
+                else:
+                        return False
+                
 	def optimal(self, gamma=10, style='static'):
 		self.gamma = gamma
 		if style == 'static':
@@ -193,7 +199,7 @@ class ltl_planner(object):
                 opt_ac_d = opt_cost[1]
                 beta_seq = [] 
                 beta = 100.0
-                beta_p = 1.0
+                beta_p = 0.0
                 count = 0
                 lam = 1.0
                 alpha = 1.0
@@ -217,7 +223,7 @@ class ltl_planner(object):
                 print '--------------------'
                 print 'Find beta via IRL done, time %.2f' %(time.time()-t0)
                 print 'In total **%d** para_dijkstra run ||| beta sequence: %s' %(count, str(beta_seq))
-                print 'Opt_path length: %d, match score sequence: %s' %(len(opt_path), str(score_seq))
+                print 'Opt_path length: %d, match score sequence: %s' %(len(opt_path), str(match_score))
                 print '--------------------'
                 self.reset_beta(beta)
                 self.optimal(style='ready')

@@ -2,7 +2,7 @@
 
 from product import ProdAut_Run
 from collections import defaultdict
-from networkx import dijkstra_predecessor_and_distance, has_path, shortest_simple_paths, shortest_path
+from networkx import dijkstra_predecessor_and_distance, has_path, shortest_simple_paths, shortest_path, all_simple_paths
 
 import time 
 
@@ -64,32 +64,30 @@ def compute_path_ac_d(product, path):
         return ac_d
 
 def opt_path_in_prefix(product, ts_path, reachable_states):
-        path_pool = set()
+        path_pool = []
         for init in product.graph['initial']:
-                if init[0] != ts_path[0]:
-                        print 'First state is not initial state. Check!'
-                        break
-                for end_state in reachable_states:
-                        for line_path in shortest_simple_paths(product, init, end_state, 'weight'):
-                                if len(line_path) == len(ts_path):
-                                        if all(line_path[k][0] == ts_path[k] for k in range(0, len(ts_path))):
-                                                path_pool.add(line_path)
-                                                break
+                if init[0] == ts_path[0]:                        
+                        for end_state in reachable_states:
+                                #for line_path in shortest_simple_paths(product, init, end_state, 'weight'):
+                                for line_path in all_simple_paths(product, init, end_state, cutoff=len(ts_path)):
+                                        if len(line_path) == len(ts_path):
+                                                if all(line_path[k][0] == ts_path[k] for k in range(0, len(ts_path))):
+                                                        path_pool.append(line_path)
+                                                        #break
         opt_line_path = min(path_pool, key=lambda p: compute_path_ac_d(product, p))
         return opt_line_path
 
 def opt_path_in_suffix(product, ts_path, reachable_states):
-        path_pool = set()
+        path_pool = []
         for acc in product.graph['accept']:
-                if acc[0] != ts_path[0]:
-                        print 'First state is not accepting state. Check!'
-                        break
-                for end_state in reachable_states:
-                        for line_path in shortest_simple_paths(product, acc, end_state, 'weight'):
-                                if len(line_path) == len(ts_path):
-                                        if all(line_path[k][0] == ts_path[k] for k in range(0, len(ts_path))):
-                                                path_pool.add(line_path)
-                                                break
+                if acc[0] == ts_path[0]:
+                        for end_state in reachable_states:
+                                #for line_path in shortest_simple_paths(product, acc, end_state, 'weight'):
+                                for line_path in all_simple_paths(product, acc, end_state, cutoff=len(ts_path)):
+                                        if len(line_path) == len(ts_path):
+                                                if all(line_path[k][0] == ts_path[k] for k in range(0, len(ts_path))):
+                                                        path_pool.append(line_path)
+                                                        #break
         opt_line_path = min(path_pool, key=lambda p: compute_path_ac_d(product, p))
         return opt_line_path        
         
