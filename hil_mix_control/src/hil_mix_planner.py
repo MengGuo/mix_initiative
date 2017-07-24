@@ -157,17 +157,24 @@ def hil_planner(sys_model, robot_name='turtlebot'):
                     SendMix(MixPublisher, mix_control)
                 else:
                     print 'No trap states are close'
-                rospy.sleep(10)
+                rospy.sleep(1)
             else:
                 print 'No Human inputs. Autonomous controller used.'
                 mix_control = list(navi_control)
                 SendMix(MixPublisher, mix_control)                
             #------------------------------
             # estimate human preference, i.e. beta
-            # and update discrete plan            
+            # and update discrete plan
+            if ((reach_ts) and (planner.check_accept(reachable_prod_states))
+                and (planner.segment != 'loop') and (planner.index == 0)):
+                print '--- New suffix execution---'
+                robot_path = [reach_ts]
+                reachable_prod_states = planner.intersect_accept(reachable_prod_states)
             if ((hi_bool) and (reach_ts)
                 and (planner.check_accept(reachable_prod_states))):
                 print '--- Accepting state reached ---'
+                print 'robot_path:', robot_path
+                print 'reachable_prod_states', reachable_prod_states
                 est_beta_seq, match_score = planner.irl(robot_path, reachable_prod_states)
                 hi_bool = False
                 robot_path = []
@@ -185,7 +192,7 @@ def hil_planner(sys_model, robot_name='turtlebot'):
             else:
                 SendGoal(GoalPublisher, current_goal, t)
                 print('Goal %s sent to %s.' %(str(current_goal),str(robot_name)))
-                rospy.sleep(10)
+                rospy.sleep(1)
         except rospy.ROSInterruptException:
             pass
 

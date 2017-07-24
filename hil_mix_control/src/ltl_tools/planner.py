@@ -63,7 +63,7 @@ class ltl_planner(object):
 		# self.opt_log.append((self.Time, self.run.pre_plan, self.run.suf_plan, self.run.precost, self.run.sufcost, self.run.totalcost))
 		self.last_time = self.Time
 		self.acc_change = 0
-		self.index = 1
+		self.index = 0
 		self.segment = 'line'
 		self.next_move = self.run.pre_plan[self.index]
 		return plantime
@@ -127,6 +127,10 @@ class ltl_planner(object):
                         return True
                 else:
                         return False
+
+        def intersect_accept(self, reachable_set):
+                accept_set = self.product.graph['accept']
+                return accept_set.intersection(reachable_set)
 
 
 	def update(self,object_name):
