@@ -192,9 +192,12 @@ def hil_planner(sys_model, robot_name='turtlebot'):
                 print 'robot_path:', robot_path
                 print 'reachable_prod_states', reachable_prod_states
                 if hi_bool:
+                    print '------------------------------'
+                    print '---------- In IRL mode now ----------'
                     est_beta_seq, match_score = planner.irl(robot_path, reachable_prod_states)
                     hi_bool = False
                     A_beta.append(est_beta_seq)
+                    print '------------------------------'
                 print '--- New suffix execution---'                
                 robot_path = [reach_ts]
                 reachable_prod_states = planner.intersect_accept(reachable_prod_states)                    

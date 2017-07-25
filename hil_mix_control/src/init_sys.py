@@ -18,7 +18,7 @@ regions = {   loc[0]: set(['r0',]),
 init_pose = loc[0]
 robot_motion = MotionFts(regions, set(ap), 'office' )
 robot_motion.set_initial(list(init_pose))
-edge_list = [(loc[0],loc[1]), (loc[1],loc[2]), (loc[2],loc[3]), (loc[3],loc[0])]
+edge_list = [(loc[0],loc[1]), (loc[0],loc[2]), (loc[1],loc[2]), (loc[2],loc[3]), (loc[3],loc[0])]
 robot_motion.add_un_edges(edge_list, unit_cost = 0.1)
 
 
