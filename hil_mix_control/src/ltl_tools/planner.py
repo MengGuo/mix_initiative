@@ -169,8 +169,9 @@ class ltl_planner(object):
         def margin_opt_path(self, opt_path, beta):
             self.reset_beta(beta)
             self.product.build_full_margin(opt_path)
-            marg_path = dijkstra_path_networkX(self.product, opt_path[0], opt_path[-1])
-            return marg_path
+            #marg_path = dijkstra_path_networkX(self.product, opt_path[0], opt_path[-1])
+            self.run, plantime = dijkstra_plan_networkX(self.product, self.gamma)
+            return self.run.suffix
 
                 
         def opt_path_match(self, path1, path2):

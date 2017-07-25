@@ -20,6 +20,8 @@ from init_sys import sys_model
 from ltl_tools.ts import MotionFts, ActionModel, MotActModel
 from ltl_tools.planner import ltl_planner
 
+import pickle
+
 
 def norm2(pose1, pose2):
     # 2nd norm distance
@@ -103,6 +105,7 @@ def hil_planner(sys_model, robot_name='turtlebot'):
     robot_pose = [None, [0, 0, 0]]
     navi_control = [0, 0]
     tele_control = [0, 0]
+    mix_control = [0, 0]
     rospy.init_node('ltl_planner_%s' %robot_name)
     print 'Robot %s: ltl_planner started!' %(robot_name)
     ###### publish to
@@ -137,12 +140,17 @@ def hil_planner(sys_model, robot_name='turtlebot'):
     robot_path = []
     reachable_prod_states = set(planner.product.graph['initial'])
     pre_reach_ts = None
+    A_robot_pose = []
+    A_control = []
+    A_beta = []
     #######
     t0 = rospy.Time.now()
     while not rospy.is_shutdown():
         try:
             t = rospy.Time.now()-t0
             print '----------Time: %.2f----------' %t.to_sec()
+            A_robot_pose.append(robot_pose)
+            A_control.append([tele_control, navi_control, mix_control])
             # robot past path update
             reach_ts = planner.reach_ts_node(robot_pose[1], reach_bound)
             if ((reach_ts) and (reach_ts != pre_reach_ts)):
@@ -186,11 +194,10 @@ def hil_planner(sys_model, robot_name='turtlebot'):
                 if hi_bool:
                     est_beta_seq, match_score = planner.irl(robot_path, reachable_prod_states)
                     hi_bool = False
+                    A_beta.append(est_beta_seq)
                 print '--- New suffix execution---'                
                 robot_path = [reach_ts]
-                reachable_prod_states = planner.intersect_accept(reachable_prod_states)
-
-                    
+                reachable_prod_states = planner.intersect_accept(reachable_prod_states)                    
             #------------------------------
             # plan execution
             current_goal = planner.next_move
@@ -207,7 +214,9 @@ def hil_planner(sys_model, robot_name='turtlebot'):
                 print('Goal %s sent to %s.' %(str(current_goal),str(robot_name)))
                 rospy.sleep(0.5)
         except rospy.ROSInterruptException:
+            pickle.dump([A_robot_pose, A_control, A_beta], open('data/exp.p', 'wb'))
             pass
+            
 
 
 
