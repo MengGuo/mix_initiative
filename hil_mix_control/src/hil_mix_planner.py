@@ -184,7 +184,7 @@ def hil_planner(sys_model, robot_name='turtlebot'):
                 mix_control = list(navi_control)
                 SendMix(MixPublisher, mix_control)
             print 'robot_path:', robot_path
-            print 'reachable_prod_states', reachable_prod_states
+            # print 'reachable_prod_states', reachable_prod_states
             #------------------------------
             # estimate human preference, i.e. beta
             # and update discrete plan
@@ -217,7 +217,7 @@ def hil_planner(sys_model, robot_name='turtlebot'):
                 print('Goal %s sent to %s.' %(str(current_goal),str(robot_name)))
                 rospy.sleep(0.5)
         except rospy.ROSInterruptException:
-            pickle.dump([A_robot_pose, A_control, A_beta], open('data/exp.p', 'wb'))
+            pickle.dump([A_robot_pose, A_control, A_beta], open('data/exp_long_cord.p', 'wb'))
             pass
             
 
