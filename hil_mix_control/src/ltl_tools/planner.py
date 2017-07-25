@@ -206,7 +206,7 @@ class ltl_planner(object):
                 alpha = 1.0
                 match_score = []
                 count = 0
-                while ((abs(beta_p-beta)>0.3) or (count <30)):
+                while ((abs(beta_p-beta)>0.3) or (count <20)):
                         print 'Iteration --%d--'%count
                         beta = beta_p
                         marg_path = self.margin_opt_path(opt_path, beta)
