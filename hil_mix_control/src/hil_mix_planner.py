@@ -50,9 +50,9 @@ def PoseCallback(posedata):
     global robot_pose # [time, [x,y,yaw]]
     header = posedata.header
     pose = posedata.pose
-    if (not robot_pose[0]) or (header.stamp > robot_pose[0]):
+    if (not robot_pose[0]) or (header.stamp.sec > robot_pose[0]):
         # more recent pose data received
-        robot_pose[0] = header.stamp
+        robot_pose[0] = header.stamp.sec
         # TODO: maybe add covariance check here?
         # print('robot position update!')
         euler = euler_from_quaternion([pose.pose.orientation.x, pose.pose.orientation.y, pose.pose.orientation.z, pose.pose.orientation.w]) #roll, pitch, yaw
@@ -102,7 +102,7 @@ def SendMix(MixPublisher, mix_control):
 def hil_planner(sys_model, robot_name='turtlebot'):
     global robot_pose, navi_control, tele_control
     robot_full_model, hard_task, soft_task = sys_model
-    robot_pose = [None, [0, 0, 0]]
+    robot_pose = [0, [0, 0, 0]]
     navi_control = [0, 0]
     tele_control = [0, 0]
     mix_control = [0, 0]
