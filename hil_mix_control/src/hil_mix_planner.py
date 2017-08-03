@@ -50,9 +50,9 @@ def PoseCallback(posedata):
     global robot_pose # [time, [x,y,yaw]]
     header = posedata.header
     pose = posedata.pose
-    if (not robot_pose[0]) or (header.stamp.sec > robot_pose[0]):
+    if (not robot_pose[0]) or (header.stamp.secs > robot_pose[0]):
         # more recent pose data received
-        robot_pose[0] = header.stamp.sec
+        robot_pose[0] = header.stamp.secs
         # TODO: maybe add covariance check here?
         # print('robot position update!')
         euler = euler_from_quaternion([pose.pose.orientation.x, pose.pose.orientation.y, pose.pose.orientation.z, pose.pose.orientation.w]) #roll, pitch, yaw
