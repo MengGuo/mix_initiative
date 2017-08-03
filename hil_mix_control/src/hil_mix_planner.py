@@ -139,7 +139,7 @@ def hil_planner(sys_model, robot_name='turtlebot'):
     #######
     robot_path = []
     reachable_prod_states = set(planner.product.graph['initial'])
-    pre_reach_ts = Nonep
+    pre_reach_ts = None
     A_robot_pose = []
     A_control = []
     A_beta = []
@@ -149,7 +149,7 @@ def hil_planner(sys_model, robot_name='turtlebot'):
         try:
             t = rospy.Time.now()-t0
             print '----------Time: %.2f----------' %t.to_sec()
-            A_robot_pose.append(list(robot_pose))
+            A_robot_pose.append(list(robot_pose))            
             A_control.append([tele_control, navi_control, mix_control])
             # robot past path update
             reach_ts = planner.reach_ts_node(robot_pose[1], reach_bound)
@@ -218,13 +218,14 @@ def hil_planner(sys_model, robot_name='turtlebot'):
                 rospy.sleep(0.5)
         except rospy.ROSInterruptException:
             pickle.dump([A_robot_pose, A_control, A_beta], open('data/exp_long_cord.p', 'wb'))
+            print 'exp_long_cord.p saved'
+            print A_robot_pose
             pass
-            
+        pickle.dump([A_robot_pose, A_control, A_beta], open('data/exp_long_cord.p', 'wb'))
+        print 'exp_long_cord.p saved'
+        print A_robot_pose
 
 
 
 if __name__ == '__main__':
-    try:
-        hil_planner(sys_model)
-    except rospy.ROSInterruptException:
-        pass
+    hil_planner(sys_model)
