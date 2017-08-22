@@ -378,6 +378,6 @@ def add_temp_task(product, run, index, segment, reg_s, reg_g, t_sg):
                              + shortest_path(ts, reg_g, new_line[g+1], 'weight'))
         if (g+2 <= K-1):
                 best_line += newline[(g+2):]
-        
-        return new_prefix, new_precost
+        best_precost = compute_path_cost(ts, best_line)
+        return best_line, best_precost
         

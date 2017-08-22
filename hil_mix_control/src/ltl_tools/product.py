@@ -170,6 +170,27 @@ class ProdAut_Run(object):
 				self.suf_plan.append(ts_edge[1][0]) # motion 
 			else:
 				self.suf_plan.append(ts_edge[1][1]) # action
+                                
+        def update_line(self, new_line, new_precost):
+                self.precost = new_precost
+                self.line = new_line
+                if len(self.line) == 2:
+                        self.pre_ts_edges = [(self.line[0], self.line[1])]
+                else:
+		        self.pre_ts_edges = zip(self.line[0:-1], self.line[1:])
+		self.pre_plan = []
+		self.pre_plan.append(self.line[0][0]) 
+		for ts_edge in self.pre_ts_edges:
+			if product.graph['ts'][ts_edge[0]][ts_edge[1]]['label'] == 'goto':
+				self.pre_plan.append(ts_edge[1][0]) # motion 
+			else:
+				self.pre_plan.append(ts_edge[1][1]) # action
+                bridge = (self.line[-1],self.loop[0])
+                if product.graph['ts'][bridge[0]][bridge[1]]['label'] == 'goto':
+			self.pre_plan.append(bridge[1][0]) # motion 
+		else:
+			self.pre_plan.append(bridge[1][1]) # action                        
+                
 
 
 

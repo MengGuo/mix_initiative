@@ -239,13 +239,13 @@ class ltl_planner(object):
                 reg_s = (temp_task[0],temp_task[1])
                 reg_g = (temp_task[2],temp_task[3])
                 t_sg = temp_task[4]
-                new_prefix, new_precost = add_temp_task(self.product, self.run, self.index, self.segment, reg_s, reg_g, t_sg)
-                self.run = ProdAut_Run(self.product, new_prefix, new_precost,
-                                       self.run.suffix, self.run.sufcost, self.run.totalcost)
+                best_line, best_precost = add_temp_task(self.product, self.run, self.index, self.segment, reg_s, reg_g, t_sg)
+                self.run.update_line(best_line, best_precost)                
                 print 'Temporary task Incorporated in plan! new_pre_plan:%s' %str(self.run.pre_plan)
                 self.index = 0
 		self.segment = 'line'
 		self.next_move = self.run.pre_plan[self.index]
+                print 'Index reset and start new_line execution'.
 
                 
 
