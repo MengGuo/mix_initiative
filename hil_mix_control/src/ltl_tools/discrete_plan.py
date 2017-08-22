@@ -363,6 +363,21 @@ def add_temp_task(product, run, index, segment, reg_s, reg_g, t_sg):
                                 new_s = s
                                 new_g = g
         print 'Best index s and g found: (s, g) = (%d, %d)' %(new_s, new_g)
-        best_line = new_line[0:s] + [r_s] + newline[(s+1):g] + [r_g] + newline[(g+1):]
+        if (g - s == 1):
+                best_line = (new_line[0:s]
+                             +  shortest_path(ts, new_line[s], reg_s, 'weight')
+                             + shortest_path(ts, reg_s, new_line[s+1], 'weight')[0:-2]
+                             + shortest_path(ts, new_line[g], reg_g, 'weight')
+                             + shortest_path(ts, reg_g, new_line[g+1], 'weight'))
+        else:
+                best_line = (new_line[0:s]
+                             +  shortest_path(ts, new_line[s], reg_s, 'weight')
+                             + shortest_path(ts, reg_s, new_line[s+1], 'weight')
+                             + newline[(s+2):g]
+                             + shortest_path(ts, new_line[g], reg_g, 'weight')
+                             + shortest_path(ts, reg_g, new_line[g+1], 'weight'))
+        if (g+2 <= K-1):
+                best_line += newline[(g+2):]
+        
         return new_prefix, new_precost
         
