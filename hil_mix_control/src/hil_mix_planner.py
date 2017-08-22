@@ -10,6 +10,7 @@ import time
 
 from geometry_msgs.msg import PoseWithCovarianceStamped, PoseStamped, Twist
 
+
 from math import pi as PI
 from math import atan2, sin, cos, sqrt, exp
 
@@ -43,6 +44,18 @@ def smooth_mix(tele_control, navi_control, dist_to_trap):
     mix_control[0] = (1-gain)*navi_control[0] + gain*tele_control[0]
     mix_control[1] = (1-gain)*navi_control[1] + gain*tele_control[1]
     return mix_control, gain
+
+def TaskCallback(taskdata):
+    # MultiArrayLayout data
+    global temp_task
+    s_x = taskdata.sx
+    s_y = taskdata.sy
+    g_x = taskdata.gx
+    g_y = taskdata.gy    
+    tsg = taskdata.tsg
+    temp_task = (s_x, s_y, g_x, g_y, tsg)
+    print 'robot received temporary task <>(%s && <> %s)' %(str((s_x,s_y)), str((g_x,g_y)))
+    return temp_task
 
 
 def PoseCallback(posedata):
@@ -100,12 +113,16 @@ def SendMix(MixPublisher, mix_control):
 
 
 def hil_planner(sys_model, robot_name='turtlebot'):
-    global robot_pose, navi_control, tele_control
+    global robot_pose, navi_control, tele_control, temp_task
     robot_full_model, hard_task, soft_task = sys_model
     robot_pose = [0, [0, 0, 0]]
     navi_control = [0, 0]
     tele_control = [0, 0]
     mix_control = [0, 0]
+    temp_task = None
+    temp_task_s = False
+    temp_task_g = False
+    flag_task_incop = False
     rospy.init_node('ltl_planner_%s' %robot_name)
     print 'Robot %s: ltl_planner started!' %(robot_name)
     ###### publish to
@@ -123,6 +140,8 @@ def hil_planner(sys_model, robot_name='turtlebot'):
     rospy.Subscriber('cmd_vel_mux/input/navi', Twist, NaviControlCallback)
     # control command from tele operation
     rospy.Subscriber('cmd_vel_mux/input/teleop', Twist, TeleControlCallback)
+    # temporary task
+    rospy.Subscriber('temp_task', MultiArrayLayout, TaskCallback)
     ####### robot information
     initial_beta = 0
     planner = ltl_planner(robot_full_model, hard_task, soft_task, initial_beta)
@@ -200,7 +219,27 @@ def hil_planner(sys_model, robot_name='turtlebot'):
                     print '------------------------------'
                 print '--- New suffix execution---'                
                 robot_path = [reach_ts]
-                reachable_prod_states = planner.intersect_accept(reachable_prod_states)                    
+                reachable_prod_states = planner.intersect_accept(reachable_prod_states)
+            #------------------------------
+            # satisfy temporary task
+            if temp_task:
+                if not flag_task_incop:
+                    planner.add_temp_task(temp_task)
+                    flag_task_incop = True
+                reg_s = (temp_task[0], temp_task[1])
+                reg_g = (temp_task[2], temp_task[3])
+                if ((reach_ts) and (reach_ts[0] == reg_s)):
+                    temp_task_s = True
+                    print 'robot reaches pi_s in the temp task:%s' %str(reg_s)
+                if (temp_task_s) and ((reach_ts) and (reach_ts[0] == reg_g)):
+                    temp_task_g = True
+                    print 'robot reaches pi_g in the temp task:%s' %str(reg_g)
+                if (temp_task_s) and (temp_task_g):
+                    print 'robot accomplished temporary task <>(%s && <> %s)' %(str(reg_s), str(reg_g))
+                    temp_task = None
+                    temp_task_s = False
+                    temp_task_g = False
+                    flag_task_incop = False
             #------------------------------
             # plan execution
             current_goal = planner.next_move

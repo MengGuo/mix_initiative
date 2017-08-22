@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 from buchi import mission_to_buchi
-from product import ProdAut
+from product import ProdAut, ProdAut_Run
 from ts import distance, reach_waypoint
 from discrete_plan import dijkstra_plan_networkX, dijkstra_plan_optimal, improve_plan_given_history, has_path_to_accept, dijkstra_path_networkX, opt_path_in_prefix, opt_path_in_suffix
 
@@ -234,6 +234,20 @@ class ltl_planner(object):
                 print 'opt_suffix updated to %s' %str(opt_suffix)
                 print '-----------------'
                 return beta_seq, match_score
+
+        def add_temp_task(self, temp_task):
+                reg_s = (temp_task[0],temp_task[1])
+                reg_g = (temp_task[2],temp_task[3])
+                t_sg = temp_task[4]
+                new_prefix, new_precost = add_temp_task(self.product, self.run, self.index, self.segment, reg_s, reg_g, t_sg)
+                self.run = ProdAut_Run(self.product, new_prefix, new_precost,
+                                       self.run.suffix, self.run.sufcost, self.run.totalcost)
+                print 'Temporary task Incorporated in plan! new_pre_plan:%s' %str(self.run.pre_plan)
+                self.index = 0
+		self.segment = 'line'
+		self.next_move = self.run.pre_plan[self.index]
+
+                
 
 
 

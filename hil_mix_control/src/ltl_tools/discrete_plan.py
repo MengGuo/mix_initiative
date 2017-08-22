@@ -318,3 +318,51 @@ def has_path_to_accept(product, f_s):
                 if has_path(product, f_s, acc):
                         return True
         return False
+
+def compute_path_cost(G, path):
+        cost = 0
+        for k in range(0,len(path)-1):
+                cost += G.edge[path[k]][path[k+1]]['weight']
+        return cost
+        
+def add_temp_task(product, run, index, segment, reg_s, reg_g, t_sg):
+        if segment == 'line':
+                new_pre = run.prefix[index:] + run.suffix
+        elif segment == 'loop':
+                new_pre = run.suffix[index:] + run.suffix[0:index]
+        new_line = [product.node[node]['ts'] for node in new_pre]
+        K = len(new_line)
+        ts = product.graph['ts']
+        w = 10
+        eval = 1000
+        for s in range(K-2):
+                for g in range(s,K-1):
+                        #---------- for r_s
+                        opt_path_to_r_s = shortest_path(ts, new_line[s], reg_s, 'weight')                        
+                        cost_to_r_s = compute_path_cost(ts, opt_path_to_r_s)
+                        opt_path_r_s_back = shortest_path(ts, reg_s, new_line[s+1], 'weight')                        
+                        cost_r_s_back = compute_path_cost(ts, opt_path_r_s_back)
+                        wo_r_s = ts.edge[new_line[s]][new_line[s+1]]['weight']
+                        extra_cost += cost_to_r_s + cost_r_s_back - wo_r_s
+                        #---------- for r_g
+                        opt_path_to_r_g = shortest_path(ts, new_line[g], reg_g, 'weight')                        
+                        cost_to_r_g = compute_path_cost(ts, opt_path_to_r_g)
+                        opt_path_r_g_back = shortest_path(ts, reg_g, new_line[g+1], 'weight')                        
+                        cost_r_g_back = compute_path_cost(ts, opt_path_r_g_back)
+                        wo_r_g = ts.edge[new_line[g]][new_line[g+1]]['weight']
+                        extra_cost += cost_to_r_g + cost_r_g_back - wo_r_g
+                        #-------- total time
+                        total_time = compute_path_cost(ts, new_line[0:(g+1)]) + extra_cost 
+                        if total_time > t_sg: # delay
+                                delay_time = total_time - t_sg
+                        else:
+                                delay_time = 0
+                        new_eval = w*delay_time + extra_cost
+                        if new_eval < eval:
+                                eval = new_eval
+                                new_s = s
+                                new_g = g
+        print 'Best index s and g found: (s, g) = (%d, %d)' %(new_s, new_g)
+        best_line = new_line[0:s] + [r_s] + newline[(s+1):g] + [r_g] + newline[(g+1):]
+        return new_prefix, new_precost
+        
