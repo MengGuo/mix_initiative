@@ -9,6 +9,8 @@ import sys
 import time
 
 from geometry_msgs.msg import PoseWithCovarianceStamped, PoseStamped, Twist
+from hil_mix_control.msg import task
+
 
 
 from math import pi as PI
@@ -112,7 +114,7 @@ def SendMix(MixPublisher, mix_control):
     MixPublisher.publish(MixMsg)
 
 
-def hil_planner(sys_model, robot_name='turtlebot'):
+def hil_planner(sys_model, robot_name='tiago'):
     global robot_pose, navi_control, tele_control, temp_task
     robot_full_model, hard_task, soft_task = sys_model
     robot_pose = [0, [0, 0, 0]]
@@ -130,18 +132,18 @@ def hil_planner(sys_model, robot_name='turtlebot'):
     #publish to
     #----------
     GoalPublisher = rospy.Publisher('move_base_simple/goal', PoseStamped, queue_size = 100)
-    MixPublisher = rospy.Publisher('cmd_vel_mux/input/mix', Twist, queue_size = 100)
+    MixPublisher = rospy.Publisher('mix_vel', Twist, queue_size = 100)
     #----------
     #subscribe to
     #----------
     # position estimate from amcl
     rospy.Subscriber('amcl_pose', PoseWithCovarianceStamped, PoseCallback)
     # control command from amcl navigation
-    rospy.Subscriber('cmd_vel_mux/input/navi', Twist, NaviControlCallback)
+    rospy.Subscriber('nav_vel', Twist, NaviControlCallback)
     # control command from tele operation
-    rospy.Subscriber('cmd_vel_mux/input/teleop', Twist, TeleControlCallback)
+    rospy.Subscriber('key_vel', Twist, TeleControlCallback)
     # temporary task
-    rospy.Subscriber('temp_task', MultiArrayLayout, TaskCallback)
+    rospy.Subscriber('temp_task', task, TaskCallback)
     ####### robot information
     initial_beta = 0
     planner = ltl_planner(robot_full_model, hard_task, soft_task, initial_beta)

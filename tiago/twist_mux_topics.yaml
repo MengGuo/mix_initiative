@@ -1,0 +1,42 @@
+# Input topics handled/muxed by the twist mux.
+# For each topic:
+# - name    : name identifier to select the topic
+# - topic   : input topic of geometry_msgs::Twist type
+# - timeout : timeout in seconds to start discarding old messages, and use 0.0 speed instead
+# - priority: priority in the range [0, 255]; the higher the more priority over other topics
+
+
+#-----------
+# original location tiago_bringup/config/twist_mux/twist_mux_topics.yaml
+
+topics:
+-
+  name    : mixcontrol
+  topic   : mix_vel
+  timeout : 0.5
+  priority: 99
+-
+  name    : navigation
+  topic   : nav_vel
+  timeout : 0.5
+  priority: 10
+-
+  name    : joystick
+  topic   : joy_vel
+  timeout : 0.5
+  priority: 20
+-
+  name    : keyboard
+  topic   : key_vel
+  timeout : 0.5
+  priority: 20  
+-
+  name    : marker
+  topic   : marker_vel
+  timeout : 0.5
+  priority: 99
+-
+  name    : rviz_joy
+  topic   : rviz_joy_vel
+  timeout : 0.5
+  priority: 95
