@@ -63,6 +63,11 @@ def compute_path_ac_d(product, path):
                 ac_d += product.edge[e[0]][e[1]]['distance']
         return ac_d
 
+
+def opt_path_jit(product, posb_runs):
+        opt_line_path = min(posb_runs, key=lambda p: compute_path_ac_d(product, p))
+        return opt_line_path
+
 def opt_path_in_prefix(product, ts_path, reachable_states):
         path_pool = []
         for init in product.graph['initial']:

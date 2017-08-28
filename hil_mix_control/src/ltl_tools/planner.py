@@ -111,6 +111,18 @@ class ltl_planner(object):
                                         new_reachable.add(t_s)
                 return new_reachable
 
+        def update_runs(self, prev_runs, ts_node):
+                new_runs = set()
+                for run in prev_runs:
+                        f_s = run[-1]
+                        for t_s in self.product.successors_iter(f_s):
+                                if t_s[0] == ts_node:
+                                        new_run = list(run)
+                                        new_run.append(t_s)
+                                        new_runs.add(list(new_run))
+                return new_runs                                        
+                
+
         def prod_dist_to_trap(self, pose, reachable_set):
                 mini_dist_reg = min(self.product.graph['ts'].graph['region'].nodes(),
                                    key = lambda s: distance(pose, s))
@@ -189,7 +201,55 @@ class ltl_planner(object):
                 elif self.segment == 'loop':
                         print 'In suffix'
                         opt_path = opt_path_in_suffix(self.product, ts_path, reachable_prod_states)
-                        return opt_path                        
+                        return opt_path
+
+        def find_opt_paths_jit(self, posb_runs):
+                opt_path = opt_path_jit(self.product, posb_runs)
+                return opt_path
+                
+        def irl_jit(self, posb_runs):
+                print '------------------------------'
+                print 'Find beta via IRL starts'
+                t0 = time.time()
+                opt_path = self.find_opt_path_jit(posb_runs)
+                opt_cost = self.compute_path_cost(opt_path)
+                opt_ac_d = opt_cost[1]
+                beta_seq = [] 
+                beta = 100.0
+                beta_p = 0.0
+                count = 0
+                lam = 1.0
+                alpha = 1.0
+                match_score = []
+                count = 0
+                while ((abs(beta_p-beta)>0.3) or (count <20)):
+                        print 'Iteration --%d--'%count
+                        beta = beta_p
+                        marg_path = self.margin_opt_path(opt_path, beta)
+                        marg_cost = self.compute_path_cost(marg_path)
+                        marg_ac_d = marg_cost[1]
+                        print '(opt_ac_d-marg_ac_d)', opt_ac_d-marg_ac_d
+                        #gradient = beta + lam*(opt_ac_d-marg_ac_d)
+                        gradient = lam*(opt_ac_d-marg_ac_d)
+                        beta_p = beta - (alpha/(count+1))*gradient
+                        print 'gradient:%.2f and beta_dif:%.2f' %(gradient, beta-beta_p)
+                        count += 1
+                        print 'old beta: %.2f ||| new beta: %.2f' %(beta, beta_p)
+                        score = self.opt_path_match(opt_path, marg_path)
+                        beta_seq.append(beta_p)
+                        match_score.append(score)
+                print '--------------------'
+                print 'Find beta via IRL done, time %.2f' %(time.time()-t0)
+                print 'In total **%d** para_dijkstra run ||| beta sequence: %s' %(count, str(beta_seq))
+                print 'Opt_path length: %d, match score sequence: %s' %(len(opt_path), str(match_score))
+                print '--------------------'
+                self.reset_beta(beta)
+                self.optimal(style='ready')
+                opt_suffix = list(self.run.suffix)
+                self.set_to_suffix()
+                print 'opt_suffix updated to %s' %str(opt_suffix)
+                print '-----------------'
+                return beta_seq, match_score                        
             
         def irl(self, ts_path, reachable_prod_states):
                 print '------------------------------'

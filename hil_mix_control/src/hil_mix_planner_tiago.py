@@ -68,7 +68,6 @@ def PoseCallback(posedata):
     if (not robot_pose[0]) or (header.stamp.secs > robot_pose[0]):
         # more recent pose data received
         robot_pose[0] = header.stamp.secs
-        # TODO: maybe add covariance check here?
         # print('robot position update!')
         euler = euler_from_quaternion([pose.pose.orientation.x, pose.pose.orientation.y, pose.pose.orientation.z, pose.pose.orientation.w]) #roll, pitch, yaw
         robot_pose[1] = [pose.pose.position.x, pose.pose.position.y, euler[2]] # in radians
@@ -121,6 +120,7 @@ def hil_planner(sys_model, robot_name='tiago'):
     navi_control = [0, 0]
     tele_control = [0, 0]
     mix_control = [0, 0]
+    posb_runs = set()
     temp_task = None
     temp_task_s = False
     temp_task_g = False
@@ -160,6 +160,7 @@ def hil_planner(sys_model, robot_name='tiago'):
     #######
     robot_path = []
     reachable_prod_states = set(planner.product.graph['initial'])
+    posb_runs = set([[n,] for n in planner.product.graph['initial']])
     pre_reach_ts = None
     A_robot_pose = []
     A_control = []
@@ -171,13 +172,14 @@ def hil_planner(sys_model, robot_name='tiago'):
             t = rospy.Time.now()-t0
             print '----------Time: %.2f----------' %t.to_sec()
             A_robot_pose.append(list(robot_pose))            
-            A_control.append([tele_control, navi_control, mix_control])
+            A_control.append([list(tele_control), list(navi_control), list(mix_control)])
             # robot past path update
             reach_ts = planner.reach_ts_node(robot_pose[1], reach_bound)
             if ((reach_ts) and (reach_ts != pre_reach_ts)):
                 print 'new region reached', reach_ts
-                robot_path.append(reach_ts)
+                robot_path.append(tuple(reach_ts))
                 reachable_prod_states = planner.update_reachable(reachable_prod_states, reach_ts)
+                posb_runs = planner.update_runs(posb_runs, reach_ts)
                 pre_reach_ts = reach_ts
                 reach_new = True
             else:
@@ -204,24 +206,28 @@ def hil_planner(sys_model, robot_name='tiago'):
                 print 'No Human inputs. Autonomous controller used.'
                 mix_control = list(navi_control)
                 SendMix(MixPublisher, mix_control)
-            print 'robot_path:', robot_path
+            # print 'robot_path:', robot_path
             # print 'reachable_prod_states', reachable_prod_states
             #------------------------------
             # estimate human preference, i.e. beta
             # and update discrete plan
             if ((reach_new) and (planner.start_suffix())):
-                print 'robot_path:', robot_path
-                print 'reachable_prod_states', reachable_prod_states
+                # print 'robot_path:', robot_path
+                # print 'reachable_prod_states', reachable_prod_states
+                # print 'possible runs', posb_runs
                 if hi_bool:
                     print '------------------------------'
                     print '---------- In IRL mode now ----------'
-                    est_beta_seq, match_score = planner.irl(robot_path, reachable_prod_states)
+                    est_beta_seq, match_score = planner.irl_jit(robot_path, posb_runs)
                     hi_bool = False
                     A_beta.append(est_beta_seq)
                     print '------------------------------'
-                print '--- New suffix execution---'                
+                print '=============================='
+                print '--- New suffix execution---'
+                print '=============================='               
                 robot_path = [reach_ts]
                 reachable_prod_states = planner.intersect_accept(reachable_prod_states)
+                posb_runs = set([[n,] for n in reachable_prod_states])
             #------------------------------
             # satisfy temporary task
             if temp_task:
@@ -258,13 +264,11 @@ def hil_planner(sys_model, robot_name='tiago'):
                 print('Goal %s sent to %s.' %(str(current_goal),str(robot_name)))
                 rospy.sleep(0.5)
         except rospy.ROSInterruptException:
-            pickle.dump([A_robot_pose, A_control, A_beta], open('data/exp_long_cord.p', 'wb'))
-            print 'exp_long_cord.p saved'
-            print A_robot_pose
+            pickle.dump([A_robot_pose, A_control, A_beta], open('data/tiago_sim.p', 'wb'))
+            print 'data/tiago_sim.p saved'
             pass
-        pickle.dump([A_robot_pose, A_control, A_beta], open('data/exp_long_cord.p', 'wb'))
-        print 'exp_long_cord.p saved'
-        print A_robot_pose
+        pickle.dump([A_robot_pose, A_control, A_beta], open('data/tiago_sim.p', 'wb'))
+        print 'data/tiago_sim.p saved'
 
 
 
