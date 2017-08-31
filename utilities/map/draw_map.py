@@ -32,7 +32,7 @@ def draw_map(img_dir):
             if pix[nx,ny][0] == 0:
                 ax.plot(nx*scale, (Ny-ny)*scale, color='k',
                         marker='s', markersize=1)
-    ax.set_xlim([0,Nx-1])
+    ax.set_xlim([0,(Nx-1)*scale])
     plt.axis('off')
     plt.axis('equal')
     fig.tight_layout(pad=0)
