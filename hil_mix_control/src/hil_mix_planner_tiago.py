@@ -37,8 +37,10 @@ def rho(s):
         return 0
         
 def smooth_mix(tele_control, navi_control, dist_to_trap):
-    ds = 0.8
-    epsilon = 0.1
+    if tele_control[0] > 0.4:
+        tele_control[0] = 0.4
+    ds = 2.5
+    epsilon = 0.5
     mix_control = [0, 0]
     gain = rho(dist_to_trap-ds)/(rho(dist_to_trap-ds)+rho(epsilon+ds-dist_to_trap))
     # mix_control[0] = navi_control[0] + gain*tele_control[0]
@@ -200,16 +202,17 @@ def hil_planner(sys_model, robot_name='tiago'):
                     dist_to_trap = 1000
                     mix_control, gain = smooth_mix(tele_control, navi_control, dist_to_trap)
                     SendMix(MixPublisher, mix_control)
-                    print 'mix_control: %s ||| navi_control: %s ||| tele_control: %s ||| gain: %.2f' %(mix_control, navi_control, tele_control, gain)
-                rospy.sleep(0.3)
+                    # print 'mix_control: %s ||| navi_control: %s ||| tele_control: %s ||| gain: %.2f' %(mix_control, navi_control, tele_control, gain)
+                rospy.sleep(0.1)
             else:
                 print 'No Human inputs. Autonomous controller used.'
                 mix_control = list(navi_control)
                 SendMix(MixPublisher, mix_control)
-                print 'mix_control: %s ||| navi_control: %s ||| tele_control: %s' %(mix_control, navi_control, tele_control)
+                #print 'mix_control: %s ||| navi_control: %s ||| tele_control: %s' %(mix_control, navi_control, tele_control)
                 rospy.sleep(0.1)
             # print 'robot_path:', robot_path
             # print 'reachable_prod_states', reachable_prod_states
+            print 'possible runs', posb_runs
             #------------------------------
             # estimate human preference, i.e. beta
             # and update discrete plan
@@ -220,7 +223,8 @@ def hil_planner(sys_model, robot_name='tiago'):
                 if hi_bool:
                     print '------------------------------'
                     print '---------- In IRL mode now ----------'
-                    est_beta_seq, match_score = planner.irl_jit(robot_path, posb_runs)
+                    print 'possible runs', posb_runs
+                    est_beta_seq, match_score = planner.irl_jit(posb_runs)
                     hi_bool = False
                     A_beta.append(est_beta_seq)
                     print '------------------------------'

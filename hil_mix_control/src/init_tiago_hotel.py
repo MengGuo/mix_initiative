@@ -37,7 +37,7 @@ edges = [(0,1), (0,2), (0,4), (0,9), (0,10),
          (10,11),(10,12),
          (11,12)]
 edge_list = [(loc[e[0]], loc[e[1]]) for e in edges]
-robot_motion.add_un_edges(edge_list, unit_cost = 0.1)
+robot_motion.add_un_edges(edge_list, unit_cost = 2)
 
 
 ##############################

@@ -2,7 +2,7 @@
 from buchi import mission_to_buchi
 from product import ProdAut, ProdAut_Run
 from ts import distance, reach_waypoint
-from discrete_plan import dijkstra_plan_networkX, dijkstra_plan_optimal, improve_plan_given_history, has_path_to_accept, dijkstra_path_networkX, opt_path_in_prefix, opt_path_in_suffix
+from discrete_plan import dijkstra_plan_networkX, dijkstra_plan_optimal, improve_plan_given_history, has_path_to_accept, dijkstra_path_networkX, opt_path_in_prefix, opt_path_in_suffix, opt_path_jit
 
 import time
 
@@ -19,8 +19,10 @@ class ltl_planner(object):
 		# record [(time, prefix, suffix, prefix_cost, suffix_cost, total_cost)]
 		self.com_log = []
 		# record [(time, no_messages)]
+                self.beta = beta
 
         def reset_beta(self, beta):
+                self.beta = beta
                 self.product.graph['beta'] = beta
 
         def set_to_suffix(self):
@@ -32,6 +34,12 @@ class ltl_planner(object):
                         return True
                 else:
                         return False
+
+        def in_suffix(self):
+                if ((self.segment == 'loop')):
+                        return True
+                else:
+                        return False                        
                 
 	def optimal(self, gamma=10, style='static'):
 		self.gamma = gamma
@@ -211,12 +219,12 @@ class ltl_planner(object):
                 print '------------------------------'
                 print 'Find beta via IRL starts'
                 t0 = time.time()
-                opt_path = self.find_opt_path_jit(posb_runs)
+                opt_path = self.find_opt_paths_jit(posb_runs)
                 opt_cost = self.compute_path_cost(opt_path)
                 opt_ac_d = opt_cost[1]
                 beta_seq = [] 
                 beta = 100.0
-                beta_p = 0.0
+                beta_p = self.beta
                 count = 0
                 lam = 1.0
                 alpha = 1.0
