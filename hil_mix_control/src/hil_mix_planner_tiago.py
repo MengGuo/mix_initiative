@@ -178,12 +178,15 @@ def hil_planner(sys_model, robot_name='tiago'):
             # robot past path update
             reach_ts = planner.reach_ts_node(robot_pose[1], reach_bound)
             if ((reach_ts) and (reach_ts != pre_reach_ts)):
-                print 'new region reached', reach_ts
-                robot_path.append(tuple(reach_ts))
-                reachable_prod_states = planner.update_reachable(reachable_prod_states, reach_ts)
-                posb_runs = planner.update_runs(posb_runs, reach_ts)
-                pre_reach_ts = reach_ts
-                reach_new = True
+                if hi_bool:
+                    print 'new region reached', reach_ts
+                    robot_path.append(tuple(reach_ts))
+                    reachable_prod_states = planner.update_reachable(reachable_prod_states, reach_ts)
+                    posb_runs = planner.update_runs(posb_runs, reach_ts)
+                    pre_reach_ts = reach_ts
+                    reach_new = True
+                if (not hi_bool) and ((reach_ts[0] != current_goal)):
+                    reach_new = False
             else:
                 reach_new = False
             #------------------------------
