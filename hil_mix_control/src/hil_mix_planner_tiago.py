@@ -201,13 +201,13 @@ def hil_planner(sys_model, robot_name='tiago'):
                     mix_control, gain = smooth_mix(tele_control, navi_control, dist_to_trap)
                     SendMix(MixPublisher, mix_control)
                     print 'mix_control: %s ||| navi_control: %s ||| tele_control: %s ||| gain: %.2f' %(mix_control, navi_control, tele_control, gain)
-                rospy.sleep(0.2)
+                rospy.sleep(0.3)
             else:
                 print 'No Human inputs. Autonomous controller used.'
                 mix_control = list(navi_control)
                 SendMix(MixPublisher, mix_control)
                 print 'mix_control: %s ||| navi_control: %s ||| tele_control: %s' %(mix_control, navi_control, tele_control)
-                rospy.sleep(0.5)
+                rospy.sleep(0.1)
             # print 'robot_path:', robot_path
             # print 'reachable_prod_states', reachable_prod_states
             #------------------------------
@@ -264,7 +264,7 @@ def hil_planner(sys_model, robot_name='tiago'):
             else:
                 SendGoal(GoalPublisher, current_goal, t)
                 print('Goal %s sent to %s.' %(str(current_goal),str(robot_name)))
-                rospy.sleep(0.5)
+                rospy.sleep(0.1)
         except rospy.ROSInterruptException:
             pickle.dump([A_robot_pose, A_control, A_beta], open('data/tiago_sim.p', 'wb'))
             print 'data/tiago_sim.p saved'
