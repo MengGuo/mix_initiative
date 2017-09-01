@@ -154,9 +154,10 @@ class ltl_planner(object):
                 else:
                         return False
 
-        def intersect_accept(self, reachable_set):
+        def intersect_accept(self, reachable_set, reach_ts):
                 accept_set = self.product.graph['accept']
-                return accept_set.intersection(reachable_set)
+                inter_set = set([s for s in accept_set if s[0] == reach_ts])
+                return inter_set
 
 
 	def update(self,object_name):

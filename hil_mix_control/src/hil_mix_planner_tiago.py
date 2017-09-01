@@ -232,7 +232,7 @@ def hil_planner(sys_model, robot_name='tiago'):
                 print '--- New suffix execution---'
                 print '=============================='               
                 robot_path = [reach_ts]
-                reachable_prod_states = planner.intersect_accept(reachable_prod_states)
+                reachable_prod_states = planner.intersect_accept(reachable_prod_states, reach_ts)
                 posb_runs = set([(n,) for n in reachable_prod_states])
             #------------------------------
             # satisfy temporary task
