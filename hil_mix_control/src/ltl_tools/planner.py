@@ -305,7 +305,7 @@ class ltl_planner(object):
                 self.index = 0
 		self.segment = 'line'
 		self.next_move = self.run.pre_plan[self.index]
-                print 'Index reset and start new_line execution'.
+                print 'Index reset and start new_line execution'
 
                 
 

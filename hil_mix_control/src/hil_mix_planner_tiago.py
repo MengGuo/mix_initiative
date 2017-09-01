@@ -37,7 +37,7 @@ def rho(s):
         return 0
         
 def smooth_mix(tele_control, navi_control, dist_to_trap):
-    ds = 0.3
+    ds = 0.8
     epsilon = 0.1
     mix_control = [0, 0]
     gain = rho(dist_to_trap-ds)/(rho(dist_to_trap-ds)+rho(epsilon+ds-dist_to_trap))
@@ -145,14 +145,14 @@ def hil_planner(sys_model, robot_name='tiago'):
     # temporary task
     rospy.Subscriber('temp_task', task, TaskCallback)
     ####### robot information
-    initial_beta = 0
+    initial_beta = 10
     planner = ltl_planner(robot_full_model, hard_task, soft_task, initial_beta)
     ####### initial plan synthesis
     planner.optimal()
     print 'Original beta:', initial_beta
     print 'Initial optimal plan', planner.run.suf_plan
     #######
-    reach_bound = 0.5 # m
+    reach_bound = 0.3 # m
     hi_bound = 0.1
     hi_bool = False
     hi_done = False
@@ -160,7 +160,7 @@ def hil_planner(sys_model, robot_name='tiago'):
     #######
     robot_path = []
     reachable_prod_states = set(planner.product.graph['initial'])
-    posb_runs = set([[n,] for n in planner.product.graph['initial']])
+    posb_runs = set([(n,) for n in planner.product.graph['initial']])
     pre_reach_ts = None
     A_robot_pose = []
     A_control = []
