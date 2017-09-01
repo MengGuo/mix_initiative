@@ -21,7 +21,7 @@ loc = [(2.5, 1.5, 0.5), (8.5, 0.5, 0.5), (12.5, 1.5, 0.5),
 regions = dict()
 for k in range(len(ap)):
     regions[loc[k]] = set([ap[k],])
-init_pose = loc[1]
+init_pose = loc[0]
 robot_motion = MotionFts(regions, set(ap), 'hotel' )
 robot_motion.set_initial(list(init_pose))
 edges = [(0,1), (0,2), (0,4), (0,9), (0,10),
@@ -57,8 +57,8 @@ robot_full_model = MotActModel(robot_motion, robot_action)
 
 # hard_task = '(([]<> r0) && ([]<> r1))'
 # soft_task = '(([]<> r2) && ([]<> r3))'
-hard_task = '(([]<> r0) && ([]<> r1))'
-soft_task = '(([]<> r2) && ([]<> r3))'
+hard_task = '(([]<> (r0 && <>(r7 || r8))) && ([]<> (r2 && <>(r3 || r6))) && ([] !r5))'
+soft_task = '(([]! c1) && ([]! c4))'
 
 # hard_task = '(([]<> r3) && ([]<> r1))'
 # soft_task = '[] ! r0'

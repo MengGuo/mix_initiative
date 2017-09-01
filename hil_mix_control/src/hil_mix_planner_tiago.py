@@ -19,7 +19,7 @@ from math import atan2, sin, cos, sqrt, exp
 from tf.transformations import euler_from_quaternion, quaternion_from_euler
 
 
-from init_sys import sys_model
+from init_tiago_hotel import sys_model
 from ltl_tools.ts import MotionFts, ActionModel, MotActModel
 from ltl_tools.planner import ltl_planner
 
@@ -152,7 +152,7 @@ def hil_planner(sys_model, robot_name='tiago'):
     print 'Original beta:', initial_beta
     print 'Initial optimal plan', planner.run.suf_plan
     #######
-    reach_bound = 0.3 # m
+    reach_bound = 1.0 # m
     hi_bound = 0.1
     hi_bool = False
     hi_done = False
@@ -206,6 +206,8 @@ def hil_planner(sys_model, robot_name='tiago'):
                 print 'No Human inputs. Autonomous controller used.'
                 mix_control = list(navi_control)
                 SendMix(MixPublisher, mix_control)
+                print 'mix_control: %s ||| navi_control: %s ||| tele_control: %s' %(mix_control, navi_control, tele_control)
+                rospy.sleep(0.5)
             # print 'robot_path:', robot_path
             # print 'reachable_prod_states', reachable_prod_states
             #------------------------------
@@ -227,7 +229,7 @@ def hil_planner(sys_model, robot_name='tiago'):
                 print '=============================='               
                 robot_path = [reach_ts]
                 reachable_prod_states = planner.intersect_accept(reachable_prod_states)
-                posb_runs = set([[n,] for n in reachable_prod_states])
+                posb_runs = set([(n,) for n in reachable_prod_states])
             #------------------------------
             # satisfy temporary task
             if temp_task:
@@ -267,8 +269,8 @@ def hil_planner(sys_model, robot_name='tiago'):
             pickle.dump([A_robot_pose, A_control, A_beta], open('data/tiago_sim.p', 'wb'))
             print 'data/tiago_sim.p saved'
             pass
-        pickle.dump([A_robot_pose, A_control, A_beta], open('data/tiago_sim.p', 'wb'))
-        print 'data/tiago_sim.p saved'
+    pickle.dump([A_robot_pose, A_control, A_beta], open('data/tiago_sim.p', 'wb'))
+    print 'data/tiago_sim.p saved'
 
 
 

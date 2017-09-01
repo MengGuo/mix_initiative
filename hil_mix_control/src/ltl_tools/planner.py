@@ -119,7 +119,7 @@ class ltl_planner(object):
                                 if t_s[0] == ts_node:
                                         new_run = list(run)
                                         new_run.append(t_s)
-                                        new_runs.add(list(new_run))
+                                        new_runs.add(tuple(new_run))
                 return new_runs                                        
                 
 
