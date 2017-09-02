@@ -2,6 +2,7 @@ from math import exp
 
 import matplotlib
 import matplotlib.pyplot as plt
+from matplotlib import gridspec
 
 import numpy
 
@@ -27,25 +28,37 @@ def smooth_mix(tele_control, navi_control, dist_to_trap):
     return mix_control, gain
 
 def draw_mix_u(d, navi_u, tele_u, mix_u, gain):
-    fig = plt.figure(figsize=(10,4))
-    ax = fig.add_subplot(111)
-    ax.plot(d, navi_u, color='r', linestyle='-',
+    fig = plt.figure(figsize=(10,3))
+    gs = gridspec.GridSpec(1, 2, width_ratios=[1, 2]) 
+    ax1 = plt.subplot(gs[0])
+    ds = 0.4
+    epsilon = 0.1
+    dd = [-ds+i*0.005 for i in range(200)]
+    gg = [rho(ddi)/(rho(ddi)+rho(epsilon-ddi)) for ddi in dd]
+    ax1.plot(dd, gg, color='k', linestyle='-',
+            linewidth=3, label=r'$\kappa(\cdot)$')
+    ax1.set_xlabel(r'$d_t-d_s(m)$',fontsize=20)
+    ax1.legend(loc = (.55,.62), labelspacing=0.7, numpoints=3, handlelength=2.5, ncol=1, prop={'size':15})
+    ax1.set_xlim(dd[0], dd[-1])
+    ax1.grid()
+    ax2 = plt.subplot(gs[1])
+    ax2.plot(d, navi_u, color='r', linestyle='-',
             linewidth=3, marker='o', mfc='r',
             fillstyle='full', markersize=6,label=r'$u_r$')
-    ax.plot(d, tele_u,color='g', linestyle='-',
+    ax2.plot(d, tele_u,color='g', linestyle='-',
             linewidth=3, marker='d', mfc='g',
             fillstyle='full', markersize=6,label=r'$u_h$')
-    ax.plot(d, mix_u, color='b', linestyle='-',
+    ax2.plot(d, mix_u, color='b', linestyle='-',
             linewidth=3, marker='>', mfc='b',
             fillstyle='full', markersize=6,label=r'$u$')
-    ax.plot(d, gain, color='k', linestyle='-',
+    ax2.plot(d, gain, color='k', linestyle='-',
             linewidth=3, marker='*', mfc='k',
             fillstyle='full', markersize=6,label=r'$\kappa$')
-    ax.set_xlabel(r'$d_t(m)$',fontsize=20)
-    ax.legend(loc = (.6,.62), labelspacing=0.7, numpoints=3, handlelength=2.5, ncol=2, prop={'size':20})
-    ax.set_xlim(0, d[-1]+0.01)
+    ax2.set_xlabel(r'$d_t(m)$',fontsize=20)
+    ax2.legend(loc = (.6,.62), numpoints=3, handlelength=2.0, ncol=2, prop={'size':15})
+    ax2.set_xlim(0, d[-1]+0.01)
+    ax2.grid()
     fig.tight_layout()
-    plt.grid()
     plt.savefig('mix_u.pdf',bbox_inches='tight')
     return fig
 
