@@ -147,12 +147,13 @@ def hil_planner(sys_model, robot_name='tiago'):
     # temporary task
     rospy.Subscriber('temp_task', task, TaskCallback)
     ####### robot information
-    initial_beta = 10
+    initial_beta = 30
     planner = ltl_planner(robot_full_model, hard_task, soft_task, initial_beta)
     ####### initial plan synthesis
     planner.optimal()
     print 'Original beta:', initial_beta
-    print 'Initial optimal plan', planner.run.suf_plan
+    print 'Initial optimal plan prefix', planner.run.pre_plan
+    print 'Initial optimal plan suffix', planner.run.suf_plan
     #######
     reach_bound = 1.0 # m
     hi_bound = 0.1
@@ -167,6 +168,7 @@ def hil_planner(sys_model, robot_name='tiago'):
     A_robot_pose = []
     A_control = []
     A_beta = []
+    current_goal = None
     #######
     t0 = rospy.Time.now()
     while not rospy.is_shutdown():
@@ -178,15 +180,12 @@ def hil_planner(sys_model, robot_name='tiago'):
             # robot past path update
             reach_ts = planner.reach_ts_node(robot_pose[1], reach_bound)
             if ((reach_ts) and (reach_ts != pre_reach_ts)):
-                if hi_bool:
-                    print 'new region reached', reach_ts
-                    robot_path.append(tuple(reach_ts))
-                    reachable_prod_states = planner.update_reachable(reachable_prod_states, reach_ts)
-                    posb_runs = planner.update_runs(posb_runs, reach_ts)
-                    pre_reach_ts = reach_ts
-                    reach_new = True
-                if (not hi_bool) and ((reach_ts[0] != current_goal)):
-                    reach_new = False
+                print 'new region reached', reach_ts
+                robot_path.append(tuple(reach_ts))
+                reachable_prod_states = planner.update_reachable(reachable_prod_states, reach_ts)
+                posb_runs = planner.update_runs(posb_runs, reach_ts)
+                pre_reach_ts = reach_ts
+                reach_new = True
             else:
                 reach_new = False
             #------------------------------
@@ -215,7 +214,7 @@ def hil_planner(sys_model, robot_name='tiago'):
                 rospy.sleep(0.1)
             # print 'robot_path:', robot_path
             # print 'reachable_prod_states', reachable_prod_states
-            print 'possible runs', posb_runs
+            # print 'possible runs', posb_runs
             #------------------------------
             # estimate human preference, i.e. beta
             # and update discrete plan

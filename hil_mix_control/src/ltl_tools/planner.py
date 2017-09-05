@@ -28,6 +28,7 @@ class ltl_planner(object):
         def set_to_suffix(self):
                 self.segment = 'loop'
                 self.index = 0
+                self.next_move = self.run.suf_plan[self.index]
                 
         def start_suffix(self):
                 if ((self.segment == 'loop') and (self.index == 0)):
@@ -231,7 +232,7 @@ class ltl_planner(object):
                 alpha = 1.0
                 match_score = []
                 count = 0
-                while ((abs(beta_p-beta)>0.3) or (count <50)):
+                while ((abs(beta_p-beta)>0.3) or (count <20)):
                         if beta_p < 0:
                                 break
                         print 'Iteration --%d--'%count
@@ -242,7 +243,10 @@ class ltl_planner(object):
                         print '(opt_ac_d-marg_ac_d)', opt_ac_d-marg_ac_d
                         #gradient = beta + lam*(opt_ac_d-marg_ac_d)
                         gradient = lam*(opt_ac_d-marg_ac_d)
-                        beta_p = beta - (alpha/(count+1))*gradient
+                        if count <10:
+                                beta_p = beta - (alpha)*gradient
+                        else:
+                                beta_p = beta - (alpha/(count+1))*gradient
                         print 'gradient:%.2f and beta_dif:%.2f' %(gradient, beta-beta_p)
                         count += 1
                         print 'old beta: %.2f ||| new beta: %.2f' %(beta, beta_p)
