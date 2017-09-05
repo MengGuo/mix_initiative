@@ -231,7 +231,9 @@ class ltl_planner(object):
                 alpha = 1.0
                 match_score = []
                 count = 0
-                while ((abs(beta_p-beta)>0.3) or (count <20)):
+                while ((abs(beta_p-beta)>0.3) or (count <50)):
+                        if beta_p < 0:
+                                break
                         print 'Iteration --%d--'%count
                         beta = beta_p
                         marg_path = self.margin_opt_path(opt_path, beta)
@@ -252,6 +254,8 @@ class ltl_planner(object):
                 print 'In total **%d** para_dijkstra run ||| beta sequence: %s' %(count, str(beta_seq))
                 print 'Opt_path length: %d, match score sequence: %s' %(len(opt_path), str(match_score))
                 print '--------------------'
+                if beta <0:
+                        beta = 0
                 self.reset_beta(beta)
                 self.optimal(style='ready')
                 opt_suffix = list(self.run.suffix)
