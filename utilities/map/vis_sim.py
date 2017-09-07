@@ -45,8 +45,9 @@ def plot_traj(img_dir, A_robot_pose, A_control):
     robot_x = []
     robot_y = []
     hi_c = []
+    sample = 5
     L = range(len(A_robot_pose)-1)
-    for k in L[0::5]:
+    for k in L[0::sample]:
         robot_pose = A_robot_pose[k]
         robot_x.append(robot_pose[1][0])
         robot_y.append(robot_pose[1][1])
@@ -60,35 +61,27 @@ def plot_traj(img_dir, A_robot_pose, A_control):
     Nx = im.size[0]
     Ny = im.size[1]
     scale = 0.02
-    Ns = 5
+    Ns = 2
     # plot map
     fig = plt.figure()
-    ax = fig.add_subplot(111)
+    ax1 = fig.add_subplot(121)
     for nx in range(0, Nx, Ns)+[Nx-1]:
         for ny in range(0, Ny, Ns)+[Ny-1]:
             if pix[nx,ny][0] == 0:
-                ax.plot(nx*scale, (Ny-ny)*scale, color='k',
+                ax1.plot(nx*scale, (Ny-ny)*scale, color='k',
                         marker='s', markersize=1)
     # plot pre hi
-    k1 = [0, 40] # initial 
-    k2 = [40, 76] #hi
-    k3 = [76, 90] # normal
-    k4 = [95, 105] #hi
-    ax.plot(robot_x[k1[0]:k1[1]], robot_y[k1[0]:k1[1]], color='b',
-            linestyle='-',linewidth=2, marker='o', mfc='r',
-            fillstyle='full', markersize=2, zorder=2, label=r'$\tau_r^0$')
-    ax.plot(robot_x[k2[0]:k2[1]], robot_y[k2[0]:k2[1]], color='r',
-            linestyle='-',linewidth=2, marker='o', mfc='r',
-            fillstyle='full', markersize=3, zorder=5, label=r'HIL')
-    ax.plot(robot_x[k3[0]:k3[1]], robot_y[k3[0]:k3[1]], color='b',
-            linestyle='-',linewidth=2, marker='o', mfc='r',
-            fillstyle='full', markersize=3, zorder=2,)
-    ax.plot(robot_x[k4[0]:k4[1]], robot_y[k4[0]:k4[1]], color='r',
-            linestyle='-',linewidth=2, marker='o', mfc='r',
-            fillstyle='full', markersize=3, zorder=5)    
-    ax.plot(robot_x[k4[1]:], robot_y[k4[1]:], color='g',
-            linestyle='-',linewidth=2, marker='o', mfc='r',
-            fillstyle='full', markersize=3, zorder=4,label=r'$\tau_r^t$')    
+    print 'traj length', len(robot_x)
+    k1 = [0, 710/sample] # initial 
+    k2 = [710/sample, 910/sample] #hi
+    k3 = [910/sample,1200/sample] # normal
+    k4 = [1200/sample, 1300/sample] #hi
+    ax1.plot(robot_x[k1[0]:k1[1]], robot_y[k1[0]:k1[1]], color='b',
+            linestyle='-',linewidth=2, marker='o', mfc='grey',
+            fillstyle='full', markersize=2.3, zorder=2, label=r'$\tau_r^0$')
+    ax1.plot(robot_x[k2[0]:k2[1]], robot_y[k2[0]:k2[1]], color='r',
+            linestyle='-',linewidth=2, marker='o', mfc='grey',
+            fillstyle='full', markersize=2.3, zorder=5, label=r'HIL')
     #---------- print regions of interest
     ap = ['r_0', 'r_1', 'r_2',
           'r_3', 'r_4', 'r_5',
@@ -104,15 +97,59 @@ def plot_traj(img_dir, A_robot_pose, A_control):
     for k in range(len(roi)):
         reg = roi[k]
         rec = matplotlib.patches.Rectangle((reg[0]-reg[2], reg[1]-reg[2]), reg[2]*2, reg[2]*2, fill = True, facecolor = 'cyan', edgecolor = 'black', linewidth = 1,  alpha =0.8)
-        ax.add_patch(rec)
-        ax.text(reg[0], reg[1]-0.1, r'$%s$' %ap[k], fontsize = 20, fontweight = 'bold', zorder = 3)
-    ax.legend(ncol=1,bbox_to_anchor=(0.8,0.6),loc='lower left', borderpad=0.1, labelspacing=0.2, columnspacing= 0.5, numpoints=3, prop={'size': 13})        
-    ax.grid()
-    ax.set_xlim([0,(Nx-1)*scale])
-    plt.axis('off')
-    plt.axis('equal')
+        ax1.add_patch(rec)
+        ax1.text(reg[0], reg[1]-0.1, r'$%s$' %ap[k], fontsize = 20, fontweight = 'bold', zorder = 3)
+    ax1.legend(ncol=1,bbox_to_anchor=(0.78,0.56),loc='lower left', borderpad=0.1, labelspacing=0.2, columnspacing= 0.3, numpoints=3, prop={'size': 10})        
+    ax1.grid()
+    ax1.set_xlim([0,(Nx-1)*scale])
+    ax1.axis('off')
+    ax1.axis('equal')
+    #==============================
+    ax2 = fig.add_subplot(122)
+    for nx in range(0, Nx, Ns)+[Nx-1]:
+        for ny in range(0, Ny, Ns)+[Ny-1]:
+            if pix[nx,ny][0] == 0:
+                ax2.plot(nx*scale, (Ny-ny)*scale, color='k',
+                        marker='s', markersize=1)
+    # plot pre hi
+    print 'traj length', len(robot_x)
+    k1 = [0, 710/sample] # initial 
+    k2 = [710/sample, 910/sample] #hi
+    k3 = [910/sample,1310/sample] # normal
+    k4 = [1300/sample, 1350/sample] #hi
+    ax2.plot(robot_x[k3[0]:k3[1]], robot_y[k3[0]:k3[1]], color='g',
+            linestyle='-',linewidth=2, marker='o', mfc='grey',
+            fillstyle='full', markersize=2.3, zorder=2,)
+    ax2.plot(robot_x[k4[0]:k4[1]], robot_y[k4[0]:k4[1]], color='r',
+            linestyle='-',linewidth=2, marker='o', mfc='grey',
+             fillstyle='full', markersize=2.3, zorder=8, label=r'HIL')    
+    ax2.plot(robot_x[k4[1]:], robot_y[k4[1]:], color='g',
+            linestyle='-',linewidth=2, marker='o', mfc='grey',
+            fillstyle='full', markersize=2.3, zorder=5,label=r'$\tau_r^t$')    
+    #---------- print regions of interest
+    ap = ['r_0', 'r_1', 'r_2',
+          'r_3', 'r_4', 'r_5',
+          'r_6', 'r_7', 'r_8',
+          'c_1', 'c_2', 'c_3',
+          'c_4']
+    roi = [(2.5, 1.5, 0.5), (8.5, 0.5, 0.5), (12.5, 1.5, 0.5),
+           (17.5, 1.5, 0.5), (8.5, 4.5, 0.5), (14.5, 4.5, 0.5),
+           (18.5, 4.5, 0.5), (3.0, 8.0, 0.7), (11.5, 8.5, 0.5),
+           (2.0, 6.0, 1.0), (11.0, 4.0, 1.0), (17.0, 4.0, 0.7),
+           (8.0, 7.0, 1.0),
+             ]
+    for k in range(len(roi)):
+        reg = roi[k]
+        rec = matplotlib.patches.Rectangle((reg[0]-reg[2], reg[1]-reg[2]), reg[2]*2, reg[2]*2, fill = True, facecolor = 'cyan', edgecolor = 'black', linewidth = 1,  alpha =0.8)
+        ax2.add_patch(rec)
+        ax2.text(reg[0], reg[1]-0.1, r'$%s$' %ap[k], fontsize = 20, fontweight = 'bold', zorder = 3)
+    ax2.legend(ncol=1,bbox_to_anchor=(0.78,0.56),loc='lower left', borderpad=0.1, labelspacing=0.2, columnspacing= 0.3, numpoints=3, prop={'size': 10})        
+    ax2.grid()
+    ax2.set_xlim([0,(Nx-1)*scale])
+    ax2.axis('off')
+    ax2.axis('equal')
     fig.tight_layout(pad=0)
-    fig.savefig('traj_sim_1.pdf',bbox_inches='tight', pad_inches=0)
+    fig.savefig('traj_sim_1_zoom.pdf',bbox_inches='tight', pad_inches=0)
         
     
 def plot_control(A_control):
@@ -137,125 +174,127 @@ def plot_control(A_control):
     # ax = fig.add_subplot(111)
     # ax.plot(T, c_linear, linestyle='--',
     #         linewidth=2.0,
-    #         color='blue',label=r'$u_r[v]$')
+    #         color='blue',label=r'$u_r[v]$',zorder = 3)
     # ax.plot(T, h_linear, linestyle='--',
     #         linewidth=2.0,
-    #         color='red',label=r'$u_h[v]$')
+    #         color='red',label=r'$u_h[v]$',zorder = 4)
     # ax.plot(T, m_linear, linestyle='-',
     #         linewidth=2.0,
-    #         color='black',label=r'$u[v]$')
+    #         color='black',label=r'$u[v]$',zorder = 2)
     # ax.legend(ncol=3,loc='upper left',borderpad=0.1, labelspacing=0.2, columnspacing= 0.5)
     # ax.grid()
     # ax.set_xlabel(r'$t(s)$')
     # ax.set_ylabel(r'$v(m/s)$')
     # ax.set_xlim(0, step*(len(A_control)))
-    # ax.set_ylim(-0.5, 1.0)
+    # ax.set_ylim(-0.5, 1.1)
     #-------------------- plot w
-    step = 1.0
-    T = [t*step for t in range(len(A_control))]
-    fig = plt.figure(figsize=(10,3))
-    ax = fig.add_subplot(111)
-    ax.plot(T, c_angular, linestyle='--',
-            linewidth=2.0,
-            color='blue',label=r'$u_r[\omega]$')
-    ax.plot(T, h_angular, linestyle='--',
-            linewidth=2.0,
-            color='red',label=r'$u_h[\omega]$')
-    ax.plot(T, m_angular, linestyle='-',
-            linewidth=2.0,
-            color='black',label=r'$u[\omega]$')
-    ax.legend(ncol=3,loc='upper left',borderpad=0.1, labelspacing=0.2, columnspacing= 0.5)
-    ax.grid()
-    ax.set_xlabel(r'$t(s)$')
-    ax.set_ylabel(r'$\omega(rad/s)$')
-    ax.set_xlim(0, step*(len(A_control)))
-    ax.set_ylim(-1.1, 1.5)
-    # ------------------------------ zoom in v
     # step = 1.0
     # T = [t*step for t in range(len(A_control))]
-    # k1 = 200
-    # k2 = 400
-    # k3 = 600
+    # fig = plt.figure(figsize=(10,3))
+    # ax = fig.add_subplot(111)
+    # ax.plot(T, c_angular, linestyle='--',
+    #         linewidth=2.0,
+    #         color='blue',label=r'$u_r[\omega]$',zorder = 3)
+    # ax.plot(T, h_angular, linestyle='--',
+    #         linewidth=2.0,
+    #         color='red',label=r'$u_h[\omega]$',zorder = 4)
+    # ax.plot(T, m_angular, linestyle='-',
+    #         linewidth=2.0,
+    #         color='black',label=r'$u[\omega]$',zorder = 2)
+    # ax.legend(ncol=3,loc='upper left',borderpad=0.1, labelspacing=0.2, columnspacing= 0.5)
+    # ax.grid()
+    # ax.set_xlabel(r'$t(s)$')
+    # ax.set_ylabel(r'$\omega(rad/s)$')
+    # ax.set_xlim(0, step*(len(A_control)))
+    # ax.set_ylim(-1.1, 1.5)
+    #------------------------------ zoom in v
+    # step = 1.0
+    # T = [t*step for t in range(len(A_control))]
+    # k1 = 710
+    # k2 = 910
+    # k3 = 1200
+    # k4 = 1400
     # fig = plt.figure(figsize=(10,3))
     # ax1 = fig.add_subplot(121)
     # ax1.plot(T[k1:k2], c_linear[k1:k2], linestyle='--',
     #         linewidth=2.0,
-    #         color='blue',label=r'$u_r[v]$')
+    #         color='blue',label=r'$u_r[v]$',zorder = 3)
     # ax1.plot(T[k1:k2], h_linear[k1:k2], linestyle='--',
     #         linewidth=2.0,
-    #         color='red',label=r'$u_h[v]$')
+    #         color='red',label=r'$u_h[v]$',zorder = 4)
     # ax1.plot(T[k1:k2], m_linear[k1:k2], linestyle='-',
     #         linewidth=2.0,
-    #         color='black',label=r'$u[v]$')
+    #         color='black',label=r'$u[v]$',zorder = 2)
     # ax1.legend(ncol=3,loc='upper left',borderpad=0.1, labelspacing=0.2, columnspacing= 0.5)
     # ax1.grid()
     # ax1.set_xlabel(r'$t(s)$')
     # ax1.set_ylabel(r'$v(m/s)$')
     # ax1.set_xlim(k1*step, k2*step)
-    # ax1.set_ylim(-0.5, 1.0)
+    # ax1.set_ylim(-0.5, 1.1)
     # ax2 = fig.add_subplot(122)
-    # ax2.plot(T[k2:k3], c_linear[k2:k3], linestyle='--',
+    # ax2.plot(T[k3:k4], c_linear[k3:k4], linestyle='--',
     #         linewidth=2.0,
-    #         color='blue',label=r'$u_r[v]$')
-    # ax2.plot(T[k2:k3], h_linear[k2:k3], linestyle='--',
+    #         color='blue',label=r'$u_r[v]$',zorder = 3)
+    # ax2.plot(T[k3:k4], h_linear[k3:k4], linestyle='--',
     #         linewidth=2.0,
-    #         color='red',label=r'$u_h[v]$')
-    # ax2.plot(T[k2:k3], m_linear[k2:k3], linestyle='-',
+    #         color='red',label=r'$u_h[v]$',zorder = 4)
+    # ax2.plot(T[k3:k4], m_linear[k3:k4], linestyle='-',
     #         linewidth=2.0,
-    #         color='black',label=r'$u[v]$')
+    #         color='black',label=r'$u[v]$',zorder = 2)
     # ax2.legend(ncol=3,loc='upper left',borderpad=0.1, labelspacing=0.2, columnspacing= 0.5)
     # ax2.grid()
     # ax2.set_xlabel(r'$t(s)$')
     # ax2.set_ylabel(r'$v(m/s)$')
-    # ax2.set_xlim(k2*step, k3*step)
-    # ax2.set_ylim(-0.5, 1.0)
+    # ax2.set_xlim(k3*step, k4*step)
+    # ax2.set_ylim(-0.5, 1.1)
     # ------------------------------ zoom in w
-    # step = 1.0
-    # T = [t*step for t in range(len(A_control))]
-    # k1 = 200
-    # k2 = 400
-    # k3 = 600
-    # fig = plt.figure(figsize=(10,3))
-    # ax1 = fig.add_subplot(121)
-    # ax1.plot(T[k1:k2], c_angular[k1:k2], linestyle='--',
-    #         linewidth=2.0,
-    #         color='blue',label=r'$u_r[\omega]$')
-    # ax1.plot(T[k1:k2], h_angular[k1:k2], linestyle='--',
-    #         linewidth=2.0,
-    #         color='red',label=r'$u_h[\omega]$')
-    # ax1.plot(T[k1:k2], m_angular[k1:k2], linestyle='-',
-    #         linewidth=2.0,
-    #         color='black',label=r'$u[\omega]$')
-    # ax1.legend(ncol=3,loc='upper left',borderpad=0.1, labelspacing=0.2, columnspacing= 0.5)
-    # ax1.grid()
-    # ax1.set_xlabel(r'$t(s)$')
-    # ax1.set_ylabel(r'$\omega(rad/s)$')
-    # ax1.set_xlim(k1*step, k2*step)
-    # ax1.set_ylim(-1.1, 1.5)
-    # ax2 = fig.add_subplot(122)
-    # ax2.plot(T[k2:k3], c_angular[k2:k3], linestyle='--',
-    #         linewidth=2.0,
-    #         color='blue',label=r'$u_r[\omega]$')
-    # ax2.plot(T[k2:k3], h_angular[k2:k3], linestyle='--',
-    #         linewidth=2.0,
-    #         color='red',label=r'$u_h[\omega]$')
-    # ax2.plot(T[k2:k3], m_angular[k2:k3], linestyle='-',
-    #         linewidth=2.0,
-    #         color='black',label=r'$u[\omega]$')
-    # ax2.legend(ncol=3,loc='upper left',borderpad=0.1, labelspacing=0.2, columnspacing= 0.5)
-    # ax2.grid()
-    # ax2.set_xlabel(r'$t(s)$')
-    # ax2.set_ylabel(r'$\omega(rad/s)$')
-    # ax2.set_xlim(k2*step, k3*step)
-    # ax2.set_ylim(-1.1, 1.5)        
-    plt.savefig(r'sim_control_w_1.pdf', bbox_inches = 'tight')
+    step = 1.0
+    T = [t*step for t in range(len(A_control))]
+    k1 = 710
+    k2 = 910
+    k3 = 1200
+    k4 = 1400
+    fig = plt.figure(figsize=(10,3))
+    ax1 = fig.add_subplot(121)
+    ax1.plot(T[k1:k2], c_angular[k1:k2], linestyle='--',
+            linewidth=2.0,
+            color='blue',label=r'$u_r[\omega]$',zorder = 3)
+    ax1.plot(T[k1:k2], h_angular[k1:k2], linestyle='--',
+            linewidth=2.0,
+            color='red',label=r'$u_h[\omega]$',zorder = 4)
+    ax1.plot(T[k1:k2], m_angular[k1:k2], linestyle='-',
+            linewidth=2.0,
+            color='black',label=r'$u[\omega]$',zorder = 2)
+    ax1.legend(ncol=3,loc='upper left',borderpad=0.1, labelspacing=0.2, columnspacing= 0.5)
+    ax1.grid()
+    ax1.set_xlabel(r'$t(s)$')
+    ax1.set_ylabel(r'$\omega(rad/s)$')
+    ax1.set_xlim(k1*step, k2*step)
+    ax1.set_ylim(-1.1, 1.5)
+    ax2 = fig.add_subplot(122)
+    ax2.plot(T[k3:k4], c_angular[k3:k4], linestyle='--',
+            linewidth=2.0,
+            color='blue',label=r'$u_r[\omega]$',zorder = 3)
+    ax2.plot(T[k3:k4], h_angular[k3:k4], linestyle='--',
+            linewidth=2.0,
+            color='red',label=r'$u_h[\omega]$',zorder = 4)
+    ax2.plot(T[k3:k4], m_angular[k3:k4], linestyle='-',
+            linewidth=2.0,
+            color='black',label=r'$u[\omega]$',zorder = 2)
+    ax2.legend(ncol=3,loc='upper left',borderpad=0.1, labelspacing=0.2, columnspacing= 0.5)
+    ax2.grid()
+    ax2.set_xlabel(r'$t(s)$')
+    ax2.set_ylabel(r'$\omega(rad/s)$')
+    ax2.set_xlim(k3*step, k4*step)
+    ax2.set_ylim(-1.1, 1.5)        
+    plt.savefig(r'sim_control_v_1.pdf', bbox_inches = 'tight')
 
 def plot_beta(A_beta):
-    fig = plt.figure(figsize=(10,3))
+    fig = plt.figure(figsize=(10,5))
     ax = fig.add_subplot(111)
     ax.plot(range(len(A_beta)), A_beta, color='b',
-            linestyle='-', linewidth=2, marker='o', mfc='r',
-            fillstyle='full', markersize=3, zorder=2)
+            linestyle='-', linewidth=5, marker='o', mfc='r',
+            fillstyle='full', markersize=6, zorder=2)
     ax.set_xlabel(r'$Iteration$')
     ax.set_ylabel(r'$\beta_k$')
     ax.set_xlim(0, len(A_beta))
@@ -265,8 +304,9 @@ def plot_beta(A_beta):
 
 
 if __name__ == "__main__":
-    A_robot_pose, A_control, A_beta = pickle.load(open('tiago_sim_perfect.p', 'rb'))
+    A_robot_pose, A_control, A_beta = pickle.load(open('tiago_sim_case_one.p', 'rb'))
     # draw_map('map.png')
-    plot_traj('map.png', A_robot_pose, A_control)
+    # plot_traj('map.png', A_robot_pose, A_control)
     # plot_control(A_control)
-    # plot_beta(A_beta[0])
+    plot_beta(A_beta[0])
+    # print A_beta[0]
