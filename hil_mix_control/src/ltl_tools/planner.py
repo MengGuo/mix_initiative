@@ -232,7 +232,7 @@ class ltl_planner(object):
                 alpha = 1.0
                 match_score = []
                 count = 0
-                while ((abs(beta_p-beta)>0.3) or (count <20)):
+                while ((abs(beta_p-beta)>0.3) and (count <20)):
                         if beta_p < 0:
                                 break
                         print 'Iteration --%d--'%count

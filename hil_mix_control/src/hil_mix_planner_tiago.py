@@ -147,7 +147,7 @@ def hil_planner(sys_model, robot_name='tiago'):
     # temporary task
     rospy.Subscriber('temp_task', task, TaskCallback)
     ####### robot information
-    initial_beta = 30
+    initial_beta = 0
     planner = ltl_planner(robot_full_model, hard_task, soft_task, initial_beta)
     ####### initial plan synthesis
     planner.optimal()
@@ -225,7 +225,7 @@ def hil_planner(sys_model, robot_name='tiago'):
                 if hi_bool:
                     print '------------------------------'
                     print '---------- In IRL mode now ----------'
-                    print 'possible runs', posb_runs
+                    # print 'possible runs', posb_runs
                     est_beta_seq, match_score = planner.irl_jit(posb_runs)
                     hi_bool = False
                     A_beta.append(est_beta_seq)

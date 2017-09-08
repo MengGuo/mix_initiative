@@ -24,17 +24,15 @@ for k in range(len(ap)):
 init_pose = loc[0]
 robot_motion = MotionFts(regions, set(ap), 'hotel' )
 robot_motion.set_initial(list(init_pose))
-edges = [(0,1), (0,2), (0,4), (0,9), (0,10),
-         (1,4), (1,2), (1,10),
-         (2,4), (2, 10),
+edges = [(0,1), (0,2), (0,4), (0,9), 
+         (1,4), (1,2), 
+         (2,4), 
          (3,11),
-         (4,10),
-         (5,8), (5,10),(5,11), (5,12),
+         (5,8), (5,11), (5,12),
          (6,11),
          (7,9),(7,12),
-         (8,12),(8,10),(8,11),
+         (8,12),(8,11),
          (9,12),
-         (10,11),(10,12),
          (11,12)]
 edge_list = [(loc[e[0]], loc[e[1]]) for e in edges]
 robot_motion.add_un_edges(edge_list, unit_cost = 2)
@@ -55,16 +53,13 @@ robot_full_model = MotActModel(robot_motion, robot_action)
 ##############################
 #specify soft and hard tasks
 
-# hard_task = '(([]<> r0) && ([]<> r1))'
-# soft_task = '(([]<> r2) && ([]<> r3))'
-# hard_task = '(([]<> (r0 && <>(r7 || r8))) && ([]<> (r2 && <>(r3 || r6))) && ([] !r5))'
-# soft_task = '(([]! c1) && ([]! c4))'
-hard_task = '(([]<> (r0 && <> (r8 && <> r7))) && ([]<> (r2 && <> r6)) && ([] !r5))'
-soft_task = '([]! c4)'
+# case one 
+# hard_task = '(([]<> (r0 && <> (r8 && <> r7))) && ([]<> (r2 && <> r6)) && ([] !r5))'
+# soft_task = '([]! c4)'
 
-
-# hard_task = '(([]<> r3) && ([]<> r1))'
-# soft_task = '[] ! r0'
+# case two
+hard_task = '(([]<> r2) && ([]<> r3) && ([]<> r8))'
+soft_task = '(([]<> r4) && ([]<> r6))'
 
 sys_model = [robot_full_model, hard_task, soft_task]
 
