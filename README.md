@@ -8,11 +8,11 @@ Description
 -----
 This package contains the implementation of the mix-initiative control of a single robot under temporal tasks. The human operator can directly modify the navigation input of the robot and assign new tasks to the robot during run time. The workspace is assumed to be only partially-known and possibly dynamic. More importantly, via this interaction, the robot can learn the human preference for the parameters used in the plan synthesis.
 
-For simulation files based on [TIAGo robot](http://wiki.ros.org/Robots/TIAGo), see [/tiago](https://github.com/MengGuo/mix_initiative/tree/master/tiago)
+For simulation files based on [TIAGo robot](http://wiki.ros.org/Robots/TIAGo), see [*/tiago*](https://github.com/MengGuo/mix_initiative/tree/master/tiago).
 
-For experiment files based on [TurtleBot](https://github.com/MengGuo/mix_initiative/tree/master/turtlebot), see [/turtlebot](https://github.com/MengGuo/mix_initiative/tree/master/turtlebot)
+For experiment files based on [TurtleBot](https://github.com/MengGuo/mix_initiative/tree/master/turtlebot), see [*/turtlebot*](https://github.com/MengGuo/mix_initiative/tree/master/turtlebot).
 
-For the complete ROS package, see [/hil_mix_control](https://github.com/MengGuo/mix_initiative/tree/master/hil_mix_control)
+For the complete ROS package, see [*/hil_mix_control*](https://github.com/MengGuo/mix_initiative/tree/master/hil_mix_control)
 
 
 <p align="center">
@@ -24,8 +24,11 @@ For the complete ROS package, see [/hil_mix_control](https://github.com/MengGuo/
 Features
 -----
 - Human operator can influence the `cmd_vel` control velocities whenever needed:
+
   -- to guide the robot through unknown area of the workspace,
+  
   -- to show the preferred path.
+  
 - Safety is ensured for all time by the mix-initiative controller, for all possible human inputs. 
 - Human can assign contingent short-term tasks during run time, which the robot will accommodate within the given deadline.
 
@@ -45,7 +48,7 @@ Content
 	SendMix(MixPublisher, mix_control)
 	print 'mix_control: %s ||| navi_control: %s ||| tele_control: %s ||| gain: %.2f' %(mix_control, navi_control, tele_control, gain)
   ```
-  The [tiago/twist_mux_topics.yaml](https://github.com/MengGuo/mix_initiative/blob/master/tiago/twist_mux_topics.yaml) needs to be modified by: 1. add `mix_vel` to the receiving topics; 2. give `mix_vel` much higher priority than `nav_vel` and `joy_vel`.
+  The [*/tiago/twist_mux_topics.yaml*](https://github.com/MengGuo/mix_initiative/blob/master/tiago/twist_mux_topics.yaml) needs to be modified by: 1. add `mix_vel` to the receiving topics; 2. give `mix_vel` much higher priority than `nav_vel` and `joy_vel`.
 
 <p align="center">
   <img src="https://github.com/MengGuo/mix_initiative/blob/master/hil_mix_control/src/figures/v_1.png" width="700"/>
@@ -95,7 +98,7 @@ Content
 
 * Temporary Task Assignment
 
-  The human can assign a temporary task to the robot during run time, with a preferred deadline. The adaptation algorithm [`add_temp_task`](https://github.com/MengGuo/mix_initiative/blob/master/hil_mix_control/src/ltl_tools/discrete_plan.py) finds the optimal indices where the robot could derived from its current plan and satisfy the temporary task.
+  The human can assign a temporary task to the robot during run time, with a preferred deadline. The adaptation algorithm [`*add_temp_task*`](https://github.com/MengGuo/mix_initiative/blob/master/hil_mix_control/src/ltl_tools/discrete_plan.py) finds the optimal indices where the robot could derived from its current plan and satisfy the temporary task.
   
 <p align="center">
   <img src="https://github.com/MengGuo/mix_initiative/blob/master/hil_mix_control/src/figures/traj_2.png" width="700"/>
