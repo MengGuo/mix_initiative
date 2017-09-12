@@ -48,7 +48,7 @@ Content
 	SendMix(MixPublisher, mix_control)
 	print 'mix_control: %s ||| navi_control: %s ||| tele_control: %s ||| gain: %.2f' %(mix_control, navi_control, tele_control, gain)
   ```
-  The [*/tiago/twist_mux_topics.yaml*](https://github.com/MengGuo/mix_initiative/blob/master/tiago/twist_mux_topics.yaml) needs to be modified by: 1. add `mix_vel` to the receiving topics; 2. give `mix_vel` much higher priority than `nav_vel` and `joy_vel`.
+  The [**`/tiago/twist_mux_topics.yaml`**](https://github.com/MengGuo/mix_initiative/blob/master/tiago/twist_mux_topics.yaml) needs to be modified by: 1. add `mix_vel` to the receiving topics; 2. give `mix_vel` much higher priority than `nav_vel` and `joy_vel`.
 
 <p align="center">
   <img src="https://github.com/MengGuo/mix_initiative/blob/master/hil_mix_control/src/figures/v_1.png" width="700"/>
