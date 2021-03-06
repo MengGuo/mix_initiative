@@ -3,6 +3,18 @@ Mix_initiative Control
 
 Human-in-the-loop mix initiative control under temporal tasks
 
+```
+@INPROCEEDINGS{8460793,
+  author={M. {Guo} and S. {Andersson} and D. V. {Dimarogonas}},
+  booktitle={2018 IEEE International Conference on Robotics and Automation (ICRA)}, 
+  title={Human-in-the-Loop Mixed-Initiative Control Under Temporal Tasks}, 
+  year={2018},
+  volume={},
+  number={},
+  pages={6395-6400},
+  doi={10.1109/ICRA.2018.8460793}}
+```
+
 -----
 Description
 -----
